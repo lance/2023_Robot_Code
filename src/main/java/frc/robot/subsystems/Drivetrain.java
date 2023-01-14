@@ -9,8 +9,11 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 
-import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+
+
+import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.CANSparkMax.IdleMode;
 
 //Kinematics and drivetrain abstractions
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
@@ -27,11 +30,10 @@ import frc.robot.Constants;
 
 public class Drivetrain extends SubsystemBase {
   //Initalize motor controllers
-  private final WPI_TalonSRX m_leftLead = new WPI_TalonSRX(Constants.CanId.leftDriveLead);
-  private final WPI_TalonSRX m_leftFollow = new WPI_TalonSRX(Constants.CanId.leftDriveFollow);
-  private final WPI_TalonSRX m_rightLead = new WPI_TalonSRX(Constants.CanId.rightDriveLead);
-  private final WPI_TalonSRX m_rightFollow = new WPI_TalonSRX(Constants.CanId.rightDriveFollow);
-
+  private final CANSparkMax m_leftLead = new CANSparkMax(Constants.CanId.leftDriveLead,MotorType.kBrushless);
+  private final CANSparkMax m_leftFollow = new CANSparkMax(Constants.CanId.leftDriveFollow,MotorType.kBrushless);
+  private final CANSparkMax m_rightLead = new CANSparkMax(Constants.CanId.rightDriveLead,MotorType.kBrushless);
+  private final CANSparkMax m_rightFollow = new CANSparkMax(Constants.CanId.rightDriveFollow,MotorType.kBrushless);
   //Create motor controller groups
   private final MotorControllerGroup m_left = new MotorControllerGroup(m_leftLead, m_leftFollow); 
   private final MotorControllerGroup m_right = new MotorControllerGroup(m_rightLead, m_rightFollow);
@@ -51,13 +53,13 @@ public class Drivetrain extends SubsystemBase {
 
   //Enable or disable brake mode on the motors
   public void brakeMode(boolean mode){
-    NeutralMode nMode = NeutralMode.Coast;
-    if (mode) nMode = NeutralMode.Brake;
+    IdleMode nMode = IdleMode.kCoast;
+    if (mode) nMode = IdleMode.kBrake;
 
-    m_leftLead.setNeutralMode(nMode);
-    m_leftFollow.setNeutralMode(nMode);
-    m_rightLead.setNeutralMode(nMode);
-    m_leftFollow.setNeutralMode(nMode);
+    m_leftLead.setIdleMode(nMode);
+    m_leftFollow.setIdleMode(nMode);
+    m_rightLead.setIdleMode(nMode);
+    m_leftFollow.setIdleMode(nMode);
   }
 
   //Simple arcade drive that uses a percentage (-1.00 to 1.00) of the max forward and angular speeds to drive the chassis at
