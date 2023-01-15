@@ -22,6 +22,11 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 
+//PID Control
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.wpilibj.Encoder;
+
+
 //Math
 import java.lang.Math;
 import edu.wpi.first.math.MathUtil;
@@ -43,6 +48,13 @@ public class Drivetrain extends SubsystemBase {
   private SimpleMotorFeedforward m_rFeedforward = new SimpleMotorFeedforward(Constants.Drive.Feedforward.Right.kS, Constants.Drive.Feedforward.Right.kV, Constants.Drive.Feedforward.Right.kA);
   private DifferentialDriveKinematics m_driveKinematics = new DifferentialDriveKinematics(Constants.Drive.kTrackWidth);
 
+  //Create left and right PID objects
+  private PIDController m_lpids = new PIDController(Constants.Drive.PIDS.Left.kS, Constants.Drive.PIDS.Left.kV, Constants.Drive.PIDS.Left.kA);
+  private PIDController m_rpids = new PIDController(Constants.Drive.PIDS.Right.kS, Constants.Drive.PIDS.Right.kV, Constants.Drive.PIDS.Right.kA);
+
+  //Create encoder objects
+  private Encoder m_leftEncoder = new Encoder(Constants.Drive.Encoders.leftAPort, Constants.Drive.Encoders.leftBPort);
+  private Encoder m_rightEncoder = new Encoder(Constants.Drive.Encoders.rightAPort, Constants.Drive.Encoders.rightBPort);
 
   //Constructor taking no arguments, all relevant values are defined in Constants.java
   public Drivetrain() {
@@ -79,10 +91,10 @@ public class Drivetrain extends SubsystemBase {
     driveWheelSpeeds(new DifferentialDriveWheelSpeeds(Constants.Drive.Rate.maxSpeed * leftPercent, Constants.Drive.Rate.maxSpeed * rightPercent));
   }
 
-  //Set the appropriate motor voltages for a desired set of wheel speeds
+  //Set the appropriate motor voltages for a desired set of wheel speeds + PIDs now
   public void driveWheelSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds){
-    m_left.setVoltage(m_lFeedforward.calculate(wheelSpeeds.leftMetersPerSecond));
-    m_right.setVoltage(m_rFeedforward.calculate(wheelSpeeds.rightMetersPerSecond));
+    m_left.setVoltage( m_lFeedforward.calculate(wheelSpeeds.leftMetersPerSecond));
+    m_right.setVoltage( m_rFeedforward.calculate(wheelSpeeds.rightMetersPerSecond));
   }
 
   //Set the appropriate motor voltages for a desired set of linear and angular chassis speeds
@@ -96,6 +108,11 @@ public class Drivetrain extends SubsystemBase {
     m_right.setVoltage(rightVoltage);
   }
 
+  //PID Control
+  public void FeedforwardPIDControl(DifferentialDriveWheelSpeeds wheelSpeeds, double leftVelocitySetpoint, double rightVelocitySetpoint){
+    m_left.setVoltage(m_lpids.calculate(m_leftEncoder.getRate(), leftVelocitySetpoint) + m_lFeedforward.calculate(leftVelocitySetpoint));
+    m_right.setVoltage(m_rpids.calculate(m_rightEncoder.getRate(),rightVelocitySetpoint) + m_rFeedforward.calculate(rightVelocitySetpoint));
+  }
   //Utility function to map joystick input nonlinearly for driver "feel"
   public static double NonLinear(double input){ return Math.copySign(input * input, input);}
 }

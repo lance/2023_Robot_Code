@@ -54,6 +54,26 @@ public final class Constants {
             public static final double driverAccel = 5;
             public static final double driverDeccel = 10;
         }
+        public final class PIDS{
+            public final class Left{
+                public static final double kS = 0.56131;
+                public static final double kV = 2.065;
+                public static final double kA = 0.37539;
+            }
+            public final class Right{
+                public static final double kS = 0.55809;
+                public static final double kV = 2.0644;
+                public static final double kA = 0.19512;
+            }
+        }
+        public final class Encoders{
+            public static final int rightAPort = 2;
+            public static final int rightBPort = 3;
+            public static final int leftBPort = 0;
+            public static final int leftAPort = 1;
+      
+            public static final int PPR = 248;
+          }
     }
 
     public static final boolean[] motorConfigs = {true,false,false};
