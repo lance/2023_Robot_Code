@@ -8,7 +8,7 @@ import java.util.function.DoubleSupplier;
 import java.util.function.BooleanSupplier;
 import frc.robot.utilities.SplitSlewRateLimiter;
 import edu.wpi.first.math.MathUtil;
-import frc.robot.Constants;
+import frc.robot.Constants.Drivetrain.Rate;
 
 /**User arcade drive command
  * One joystick for linear (forward/backward) motion and one for angular motion
@@ -27,7 +27,7 @@ public class UserArcadeDrive extends CommandBase {
   */
   public UserArcadeDrive(DoubleSupplier linearSupplier, DoubleSupplier angularSupplier, BooleanSupplier boostSupplier, Drivetrain drivetrain) {
     m_drivetrain = drivetrain;
-    m_accelerationLimiter = new SplitSlewRateLimiter(Constants.Drive.Rate.driverAccel, Constants.Drive.Rate.driverDeccel);
+    m_accelerationLimiter = new SplitSlewRateLimiter(Rate.driverAccel, Rate.driverDeccel);
     m_linearInput = linearSupplier;
     m_angularInput = angularSupplier;
     m_boostInput = boostSupplier;
@@ -50,8 +50,8 @@ public class UserArcadeDrive extends CommandBase {
     double zRotation = Drivetrain.NonLinear(MathUtil.clamp(m_angularInput.getAsDouble(), -1.0, 1.0));
 
     //Calculate the linear and rotation speeds requested by the inputs using either the boost(max) range, or the driver range
-    double linearSpeed = xSpeed * (m_boostInput.getAsBoolean() ? Constants.Drive.Rate.maxSpeed : Constants.Drive.Rate.driverSpeed);
-    double angularSpeed = zRotation * Constants.Drive.Rate.driverAngularSpeed;
+    double linearSpeed = xSpeed * (m_boostInput.getAsBoolean() ? Rate.maxSpeed : Rate.driverSpeed);
+    double angularSpeed = zRotation * Rate.driverAngularSpeed;
 
     //Apply the calculated speeds to the drivetrain
     m_drivetrain.driveChassisSpeeds(new ChassisSpeeds((
