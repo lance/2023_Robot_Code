@@ -16,6 +16,10 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
+  public static final class OperatorInterface{
+    public static final int primaryController = 0;
+  }
+
   public static final class CanId{
     public static final int climberLiftLead = 1;
     public static final int climberLiftFollow = 2;
@@ -52,7 +56,7 @@ public final class Constants {
       //TODO Measure Trackwidth
       public static final double trackWidthMeters = Units.inchesToMeters(30);
       public static final boolean kInvertDrive = true;
-    }
+      }
 
     public static final class Rate{
       //Speeds in m/s rotations in rad/s
