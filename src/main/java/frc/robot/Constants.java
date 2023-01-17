@@ -52,7 +52,7 @@ public final class Constants {
       //TODO Measure Trackwidth
       public static final double trackWidthMeters = Units.inchesToMeters(30);
       public static final boolean kInvertDrive = true;
-      }
+    }
 
     public static final class Rate{
       //Speeds in m/s rotations in rad/s
