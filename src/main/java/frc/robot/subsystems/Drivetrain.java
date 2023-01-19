@@ -65,7 +65,7 @@ import frc.robot.Constants.Vision;
 
 public class Drivetrain extends SubsystemBase {
   //Initalize motor controllers
-  private final CANSparkMax m_leftLead = new CANSparkMax(CanId.leftDriveLead,MotorType.kBrushless);
+  private final CANSparkMax m_leftLead = new CANSparkMax(CanId.leftDriveLead, MotorType.kBrushless);
   private final CANSparkMax m_leftFollow = new CANSparkMax(CanId.leftDriveFollow,MotorType.kBrushless);
   private final CANSparkMax m_rightLead = new CANSparkMax(CanId.rightDriveLead,MotorType.kBrushless);
   private final CANSparkMax m_rightFollow = new CANSparkMax(CanId.rightDriveFollow,MotorType.kBrushless);

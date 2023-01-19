@@ -19,7 +19,9 @@ public final class Constants {
   public static final class OperatorInterface{
     public static final int primaryController = 0;
   }
+  public static final class ArmConstants {
 
+  }
   public static final class CanId{
     public static final int climberLiftLead = 1;
     public static final int climberLiftFollow = 2;
@@ -34,6 +36,10 @@ public final class Constants {
     public static final int rightDriveFollow = 10;
     public static final int compressor = 8;
     public static final int solenoidPort = 0;
+    public static final int shoulderNEO1 = 20;
+    public static final int shoulderNEO2 = 21;
+    public static final int elbowNEO = 22;
+    public static final int turret = 23;
   }
 
   public static final class Drivetrain{
