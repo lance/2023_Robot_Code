@@ -63,6 +63,11 @@ import frc.robot.Constants.Drivetrain.*;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.Vision;
 
+//Traj Gen
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
+
 public class Drivetrain extends SubsystemBase {
   //Initalize motor controllers
   private final CANSparkMax m_leftLead = new CANSparkMax(CanId.leftDriveLead, MotorType.kBrushless);
@@ -187,6 +192,26 @@ public class Drivetrain extends SubsystemBase {
   public double getRightVelocity(){ return m_leftEncoder.getRate();}
 
   public double getAngle(){ return Units.degreesToRadians(-m_gyro.getYaw());}
+
+
+  public void generateTrajectory(Pose2d endPose, ArrayList<Translation2d> waypoints) {
+
+    //Starting Position
+    var StartPosition = m_poseEstimator.getEstimatedPosition();
+    //Desired Postion
+    var EndPosition = endPose;
+    //Empty list of waypoints
+    var interiorWaypoints = waypoints;
+    //Config
+    TrajectoryConfig config = new TrajectoryConfig(Units.feetToMeters(12), Units.feetToMeters(12));
+    config.setReversed(true);
+    //Initialize Traj
+    var trajectory = TrajectoryGenerator.generateTrajectory(
+        StartPosition,
+        interiorWaypoints,
+        EndPosition,
+        config);
+  }
 
   private void shuffleBoardInit(){
     m_SBSensors = m_SBTab.getLayout("Sensors", BuiltInLayouts.kList)
