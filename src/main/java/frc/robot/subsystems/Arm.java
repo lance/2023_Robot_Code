@@ -1,53 +1,43 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 //Motor controllers
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+//import com.revrobotics.CANSparkMaxLowLevel.ControlType;
+
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import com.revrobotics.CANSparkMax.IdleMode;
 
+//Constants
 import frc.robot.Constants.CanId;
 
 public class Arm extends SubsystemBase {
   //Object initialization motor controllers
   private final CANSparkMax m_shoulderNeo1 = new CANSparkMax(CanId.shoulderNEO1, MotorType.kBrushless);
-  private final CANSparkMax m_shoulderNEO2 = new CANSparkMax(CanId.shoulderNEO2, MotorType.kBrushless);
+  private final CANSparkMax m_shoulderNeo2 = new CANSparkMax(CanId.shoulderNEO2, MotorType.kBrushless);
   private final CANSparkMax m_elbowNEO = new CANSparkMax(CanId.elbowNEO, MotorType.kBrushless);
   private final WPI_TalonSRX m_leftLead = new WPI_TalonSRX(CanId.turret);
-  private final MotorControllerGroup m_shoulderMotorControllerGroup = new MotorControllerGroup(m_shoulderNeo1, m_shoulderNEO2);
 
+  public Arm() {
+    m_shoulderNeo2.follow(m_shoulderNeo1);
+  }
+  
+  //Enable or disable brake mode on the motors
+  public void brakeMode(boolean mode){
+    IdleMode nMode = IdleMode.kCoast;
+    if (mode) nMode = IdleMode.kBrake;
 
-
-
-
-  public Arm() {}
-
-  /**
-   * Example command factory method.
-   *
-   * @return a command
-   */
-  public CommandBase exampleMethodCommand() {
-    // Inline construction of command goes here.
-    // Subsystem::RunOnce implicitly requires `this` subsystem.
-    return runOnce(
-        () -> {
-          /* one-time action goes here */
-        });
+    m_shoulderNeo1.setIdleMode(nMode);
+    m_shoulderNeo2.setIdleMode(nMode);
   }
 
-  /**
-   * An example method querying a boolean state of the subsystem (for example, a digital sensor).
-   *
-   * @return value of some boolean subsystem state, such as a digital sensor.
-   */
-  public boolean exampleCondition() {
-    // Query some boolean state, such as a digital sensor.
-    return false;
-  }
+  //TODO figure out how to set with current - Current PIDS
+  public void setTurretCurrent(){}
+  public void setShoulderCurrent(){}
+  public void setElbowCurrent(){}
 
   @Override
   public void periodic() {

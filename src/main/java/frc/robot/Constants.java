@@ -21,6 +21,9 @@ public final class Constants {
   }
   public static final class ArmConstants {
 
+    public static final class GripperConstants {
+      public static final boolean inverted = true;
+    }
   }
   public static final class CanId{
     public static final int climberLiftLead = 1;
@@ -40,6 +43,8 @@ public final class Constants {
     public static final int shoulderNEO2 = 21;
     public static final int elbowNEO = 22;
     public static final int turret = 23;
+    public static final int gripperNeo1 = 24;
+    public static final int gripperNeo2 = 25;
   }
 
   public static final class Drivetrain{
