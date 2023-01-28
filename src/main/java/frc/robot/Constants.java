@@ -104,4 +104,15 @@ public final class Constants {
       new Translation3d(-0.5, 0.0, 0.5),
       new Rotation3d(0,0,0));
   }
+  public static final class kSensors{
+    public static final int ledPort = 0;
+    public static final int ledLength = 300;
+    //For Color Sensor
+    public static final int proximityThreshold = 100;
+  }
+  public enum GamePiece{
+    CONE,
+    KUBE,
+    NONE
+  }
 }

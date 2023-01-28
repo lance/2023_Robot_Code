@@ -8,7 +8,6 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 //import com.revrobotics.CANSparkMaxLowLevel.ControlType;
 
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
-import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import com.revrobotics.CANSparkMax.IdleMode;
 
 //Constants
@@ -21,6 +20,7 @@ public class Arm extends SubsystemBase {
   private final CANSparkMax m_elbowNEO = new CANSparkMax(CanId.elbowNEO, MotorType.kBrushless);
   private final WPI_TalonSRX m_leftLead = new WPI_TalonSRX(CanId.turret);
 
+  
   public Arm() {
     m_shoulderNeo2.follow(m_shoulderNeo1);
   }
