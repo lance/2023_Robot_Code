@@ -60,8 +60,13 @@ public final class Constants {
         public static final double kV = 2.0644;
         public static final double kA = 0.19512;
       }
+      
     }
-
+    public final class TrajectoryConstants{
+      public static final int kMaxSpeedMetersPerSecond = 12;
+      public static final int kMaxAccelerationMetersPerSecondSquared = 12;
+      public static final boolean setReversed = true;
+    }
     public static final class Dimensions{
       public static final double wheelCircumferenceMeters = Units.inchesToMeters(6*Math.PI);
       //TODO Measure Trackwidth

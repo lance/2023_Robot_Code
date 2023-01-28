@@ -67,6 +67,7 @@ import frc.robot.Constants.Vision;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
+import edu.wpi.first.math.trajectory.Trajectory;
 
 public class Drivetrain extends SubsystemBase {
   //Initalize motor controllers
@@ -194,7 +195,7 @@ public class Drivetrain extends SubsystemBase {
   public double getAngle(){ return Units.degreesToRadians(-m_gyro.getYaw());}
 
 
-  public void generateTrajectory(Pose2d endPose, ArrayList<Translation2d> waypoints) {
+  public Trajectory generateTrajectory(Pose2d endPose, ArrayList<Translation2d> waypoints) {
 
     //Starting Position
     var StartPosition = m_poseEstimator.getEstimatedPosition();
@@ -203,14 +204,16 @@ public class Drivetrain extends SubsystemBase {
     //Empty list of waypoints
     var interiorWaypoints = waypoints;
     //Config
-    TrajectoryConfig config = new TrajectoryConfig(Units.feetToMeters(12), Units.feetToMeters(12));
-    config.setReversed(true);
+    TrajectoryConfig config = new TrajectoryConfig(Units.feetToMeters(TrajectoryConstants.kMaxSpeedMetersPerSecond), Units.feetToMeters(TrajectoryConstants.kMaxAccelerationMetersPerSecondSquared))
+    .setKinematics(m_driveKinematics);
+    config.setReversed(TrajectoryConstants.setReversed);
     //Initialize Traj
     var trajectory = TrajectoryGenerator.generateTrajectory(
         StartPosition,
         interiorWaypoints,
         EndPosition,
         config);
+    return trajectory;
   }
 
   private void shuffleBoardInit(){
