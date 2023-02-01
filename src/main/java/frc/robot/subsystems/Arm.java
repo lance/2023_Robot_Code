@@ -15,14 +15,14 @@ import frc.robot.Constants.CanId;
 
 public class Arm extends SubsystemBase {
   //Object initialization motor controllers
-  private final CANSparkMax m_shoulderNeo1 = new CANSparkMax(CanId.shoulderNEO1, MotorType.kBrushless);
-  private final CANSparkMax m_shoulderNeo2 = new CANSparkMax(CanId.shoulderNEO2, MotorType.kBrushless);
-  private final CANSparkMax m_elbowNEO = new CANSparkMax(CanId.elbowNEO, MotorType.kBrushless);
-  private final WPI_TalonSRX m_leftLead = new WPI_TalonSRX(CanId.turret);
+  private final CANSparkMax shoulderNeo1 = new CANSparkMax(CanId.shoulderNeo1, MotorType.kBrushless);
+  private final CANSparkMax shoulderNeo2 = new CANSparkMax(CanId.shoulderNeo2, MotorType.kBrushless);
+  private final CANSparkMax elbowNeo = new CANSparkMax(CanId.elbowNeo, MotorType.kBrushless);
+  private final WPI_TalonSRX leftLead = new WPI_TalonSRX(CanId.turret);
 
   
   public Arm() {
-    m_shoulderNeo2.follow(m_shoulderNeo1);
+    shoulderNeo2.follow(shoulderNeo1);
   }
   
   //Enable or disable brake mode on the motors
@@ -30,8 +30,8 @@ public class Arm extends SubsystemBase {
     IdleMode nMode = IdleMode.kCoast;
     if (mode) nMode = IdleMode.kBrake;
 
-    m_shoulderNeo1.setIdleMode(nMode);
-    m_shoulderNeo2.setIdleMode(nMode);
+    shoulderNeo1.setIdleMode(nMode);
+    shoulderNeo2.setIdleMode(nMode);
   }
 
   //TODO figure out how to set with current - Current PIDS

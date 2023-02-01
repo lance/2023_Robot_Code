@@ -39,9 +39,9 @@ public final class Constants {
     public static final int rightDriveFollow = 10;
     public static final int compressor = 8;
     public static final int solenoidPort = 0;
-    public static final int shoulderNEO1 = 20;
-    public static final int shoulderNEO2 = 21;
-    public static final int elbowNEO = 22;
+    public static final int shoulderNeo1 = 20;
+    public static final int shoulderNeo2 = 21;
+    public static final int elbowNeo = 22;
     public static final int turret = 23;
     public static final int gripperNeo1 = 24;
     public static final int gripperNeo2 = 25;

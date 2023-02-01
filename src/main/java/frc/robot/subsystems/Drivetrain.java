@@ -71,58 +71,58 @@ import edu.wpi.first.math.trajectory.Trajectory;
 
 public class Drivetrain extends SubsystemBase {
   //Initalize motor controllers
-  private final CANSparkMax m_leftLead = new CANSparkMax(CanId.leftDriveLead, MotorType.kBrushless);
-  private final CANSparkMax m_leftFollow = new CANSparkMax(CanId.leftDriveFollow,MotorType.kBrushless);
-  private final CANSparkMax m_rightLead = new CANSparkMax(CanId.rightDriveLead,MotorType.kBrushless);
-  private final CANSparkMax m_rightFollow = new CANSparkMax(CanId.rightDriveFollow,MotorType.kBrushless);
+  private final CANSparkMax leftLead = new CANSparkMax(CanId.leftDriveLead, MotorType.kBrushless);
+  private final CANSparkMax leftFollow = new CANSparkMax(CanId.leftDriveFollow,MotorType.kBrushless);
+  private final CANSparkMax rightLead = new CANSparkMax(CanId.rightDriveLead,MotorType.kBrushless);
+  private final CANSparkMax rightFollow = new CANSparkMax(CanId.rightDriveFollow,MotorType.kBrushless);
   //Create motor controller groups
-  private final MotorControllerGroup m_left = new MotorControllerGroup(m_leftLead, m_leftFollow); 
-  private final MotorControllerGroup m_right = new MotorControllerGroup(m_rightLead, m_rightFollow);
+  private final MotorControllerGroup leftMotorControllerGroup = new MotorControllerGroup(leftLead, leftFollow); 
+  private final MotorControllerGroup rightMotorControllerGroup = new MotorControllerGroup(rightLead, rightFollow);
 
   //Create Drivetrain controllers and kinematics objects
-  private SimpleMotorFeedforward m_leftFeedforward = new SimpleMotorFeedforward(Feedforward.Left.kS, Feedforward.Left.kV, Feedforward.Left.kA);
-  private SimpleMotorFeedforward m_rightFeedforward = new SimpleMotorFeedforward(Feedforward.Right.kS, Feedforward.Right.kV, Feedforward.Right.kA);
-  private DifferentialDriveKinematics m_driveKinematics = new DifferentialDriveKinematics(Dimensions.trackWidthMeters);
-  private DifferentialDrivePoseEstimator m_poseEstimator;
-  private PIDController m_leftPIDs = new PIDController(PIDs.Left.kS, PIDs.Left.kV, PIDs.Left.kA);
-  private PIDController m_rightPIDs = new PIDController(PIDs.Right.kS, PIDs.Right.kV, PIDs.Right.kA);
+  private SimpleMotorFeedforward leftFeedforward = new SimpleMotorFeedforward(Feedforward.Left.kS, Feedforward.Left.kV, Feedforward.Left.kA);
+  private SimpleMotorFeedforward rightFeedforward = new SimpleMotorFeedforward(Feedforward.Right.kS, Feedforward.Right.kV, Feedforward.Right.kA);
+  private DifferentialDriveKinematics driveKinematics = new DifferentialDriveKinematics(Dimensions.trackWidthMeters);
+  private DifferentialDrivePoseEstimator DDPoseEstimator;
+  private PIDController leftPIDs = new PIDController(PIDs.Left.kS, PIDs.Left.kV, PIDs.Left.kA);
+  private PIDController rightPIDs = new PIDController(PIDs.Right.kS, PIDs.Right.kV, PIDs.Right.kA);
 
   //Create encoder and gyro objects
-  private Encoder m_leftEncoder = new Encoder(Encoders.leftAPort, Encoders.leftBPort);
-  private Encoder m_rightEncoder = new Encoder(Encoders.rightAPort, Encoders.rightBPort);
-  private final AHRS m_gyro = new AHRS(Port.kMXP);
+  private Encoder leftEncoder = new Encoder(Encoders.leftAPort, Encoders.leftBPort);
+  private Encoder rightEncoder = new Encoder(Encoders.rightAPort, Encoders.rightBPort);
+  private final AHRS gyro = new AHRS(Port.kMXP);
 
   //Create vision objects
-  private PhotonCamera m_aprilTagCamera = new PhotonCamera("AprilTagCam");
-  private AprilTagFieldLayout m_aprilTagFieldLayout;
+  private PhotonCamera aprilTagCamera = new PhotonCamera("AprilTagCam");
+  private AprilTagFieldLayout aprilTagFieldLayout;
   private List<Pair<PhotonCamera, Transform3d>> camList = new ArrayList<Pair<PhotonCamera, Transform3d>>();
-  private RobotPoseEstimator robotPoseEstimator;
+  private RobotPoseEstimator AprilTagPoseEstimator;
 
   //Shuffleboard
-  private ShuffleboardTab m_SBTab = Shuffleboard.getTab("Pose Estimation");
-  private ShuffleboardLayout m_SBSensors;
-  private Field2d m_robotField2d = new Field2d();
+  private ShuffleboardTab SBTab = Shuffleboard.getTab("Pose Estimation");
+  private ShuffleboardLayout SBSensors;
+  private Field2d robotField2d = new Field2d();
 
   //Constructor taking no arguments, all relevant values are defined in Constants.java
   public Drivetrain() {
     //Set one drivetrain pair to run reverse so both drive forward on the positive direction (Which group selected by Constants.Drive.kInvertDrive; left = False)
-    m_left.setInverted(!Dimensions.kInvertDrive);
-    m_right.setInverted(Dimensions.kInvertDrive);
-    m_leftEncoder.setDistancePerPulse(Dimensions.wheelCircumferenceMeters/Encoders.PPR);
-    m_rightEncoder.setDistancePerPulse(Dimensions.wheelCircumferenceMeters/Encoders.PPR);
+    leftMotorControllerGroup.setInverted(!Dimensions.kInvertDrive);
+    rightMotorControllerGroup.setInverted(Dimensions.kInvertDrive);
+    leftEncoder.setDistancePerPulse(Dimensions.wheelCircumferenceMeters/Encoders.PPR);
+    rightEncoder.setDistancePerPulse(Dimensions.wheelCircumferenceMeters/Encoders.PPR);
 
     //TODO clean up this garbage
     try{
-      m_aprilTagFieldLayout = new AprilTagFieldLayout(new File(Filesystem.getDeployDirectory(), "HallLayout.json").toPath());
+      aprilTagFieldLayout = new AprilTagFieldLayout(new File(Filesystem.getDeployDirectory(), "HallLayout.json").toPath());
     }
     catch(Exception e){
       System.out.println("Failed to load AprilTag Layout");
     }
-    camList.add(new Pair<PhotonCamera, Transform3d>(m_aprilTagCamera, Vision.aprilTagCameraPositionTransform));
-    robotPoseEstimator = new RobotPoseEstimator(m_aprilTagFieldLayout, PoseStrategy.LOWEST_AMBIGUITY, camList);
+    camList.add(new Pair<PhotonCamera, Transform3d>(aprilTagCamera, Vision.aprilTagCameraPositionTransform));
+    AprilTagPoseEstimator = new RobotPoseEstimator(aprilTagFieldLayout, PoseStrategy.LOWEST_AMBIGUITY, camList);
 
-    m_poseEstimator = new DifferentialDrivePoseEstimator(
-      m_driveKinematics,
+    DDPoseEstimator = new DifferentialDrivePoseEstimator(
+      driveKinematics,
       new Rotation2d(getAngle()),
       getLeftDistance(), getRightDistance(),
       new Pose2d(3, 3, new Rotation2d(0)),
@@ -137,10 +137,10 @@ public class Drivetrain extends SubsystemBase {
     IdleMode nMode = IdleMode.kCoast;
     if (mode) nMode = IdleMode.kBrake;
 
-    m_leftLead.setIdleMode(nMode);
-    m_leftFollow.setIdleMode(nMode);
-    m_rightLead.setIdleMode(nMode);
-    m_leftFollow.setIdleMode(nMode);
+    leftLead.setIdleMode(nMode);
+    leftFollow.setIdleMode(nMode);
+    rightLead.setIdleMode(nMode);
+    leftFollow.setIdleMode(nMode);
   }
 
   //Simple arcade drive that uses a percentage (-1.00 to 1.00) of the max forward and angular speeds to drive the chassis at
@@ -148,7 +148,7 @@ public class Drivetrain extends SubsystemBase {
     linearPercent = MathUtil.clamp(linearPercent, -1, 1);
     angularPercent = MathUtil.clamp(angularPercent, -1, 1);
 
-    double maxAngularSpeed = m_driveKinematics.toChassisSpeeds(new DifferentialDriveWheelSpeeds(Rate.maxSpeed, Rate.maxSpeed)).omegaRadiansPerSecond;
+    double maxAngularSpeed = driveKinematics.toChassisSpeeds(new DifferentialDriveWheelSpeeds(Rate.maxSpeed, Rate.maxSpeed)).omegaRadiansPerSecond;
     driveChassisSpeeds(new ChassisSpeeds(Rate.maxSpeed * linearPercent, 0, maxAngularSpeed * angularPercent));
   }
 
@@ -162,50 +162,50 @@ public class Drivetrain extends SubsystemBase {
 
   //Set the appropriate motor voltages for a desired set of wheel speeds + PIDs now
   public void driveWheelSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds){
-    m_left.setVoltage( m_leftFeedforward.calculate(wheelSpeeds.leftMetersPerSecond));
-    m_right.setVoltage( m_rightFeedforward.calculate(wheelSpeeds.rightMetersPerSecond));
+    leftMotorControllerGroup.setVoltage( leftFeedforward.calculate(wheelSpeeds.leftMetersPerSecond));
+    rightMotorControllerGroup.setVoltage( rightFeedforward.calculate(wheelSpeeds.rightMetersPerSecond));
   }
 
   //Set the appropriate motor voltages for a desired set of linear and angular chassis speeds
-  public void driveChassisSpeeds(ChassisSpeeds chassisSpeeds){ driveWheelSpeeds(m_driveKinematics.toWheelSpeeds(chassisSpeeds));}
+  public void driveChassisSpeeds(ChassisSpeeds chassisSpeeds){ driveWheelSpeeds(driveKinematics.toWheelSpeeds(chassisSpeeds));}
 
   //Drive the motors at a given voltage
   public void driveVoltages(double leftVoltage, double rightVoltage){
-    m_left.setVoltage(leftVoltage);
-    m_right.setVoltage(rightVoltage);
+    leftMotorControllerGroup.setVoltage(leftVoltage);
+    rightMotorControllerGroup.setVoltage(rightVoltage);
   }
 
   //PID Control
   public void FeedforwardPIDControl(DifferentialDriveWheelSpeeds wheelSpeeds, double leftVelocitySetpoint, double rightVelocitySetpoint){
-    m_left.setVoltage(m_leftPIDs.calculate(m_leftEncoder.getRate(), leftVelocitySetpoint) + m_leftFeedforward.calculate(leftVelocitySetpoint));
-    m_right.setVoltage(m_rightPIDs.calculate(m_rightEncoder.getRate(),rightVelocitySetpoint) + m_rightFeedforward.calculate(rightVelocitySetpoint));
+    leftMotorControllerGroup.setVoltage(leftPIDs.calculate(leftEncoder.getRate(), leftVelocitySetpoint) + leftFeedforward.calculate(leftVelocitySetpoint));
+    rightMotorControllerGroup.setVoltage(rightPIDs.calculate(rightEncoder.getRate(),rightVelocitySetpoint) + rightFeedforward.calculate(rightVelocitySetpoint));
   }
   //Utility function to map joystick input nonlinearly for driver "feel"
   public static double NonLinear(double input){ return Math.copySign(input * input, input);}
 
   //Encoder and gyro methods
-  public double getLeftDistance(){ return m_leftEncoder.getDistance();}
+  public double getLeftDistance(){ return leftEncoder.getDistance();}
 
-  public double getRightDistance(){ return m_rightEncoder.getDistance();}
+  public double getRightDistance(){ return rightEncoder.getDistance();}
 
-  public double getLeftVelocity(){ return m_rightEncoder.getRate();}
+  public double getLeftVelocity(){ return rightEncoder.getRate();}
 
-  public double getRightVelocity(){ return m_leftEncoder.getRate();}
+  public double getRightVelocity(){ return leftEncoder.getRate();}
 
-  public double getAngle(){ return Units.degreesToRadians(-m_gyro.getYaw());}
+  public double getAngle(){ return Units.degreesToRadians(-gyro.getYaw());}
 
 
   public Trajectory generateTrajectory(Pose2d endPose, ArrayList<Translation2d> waypoints) {
 
     //Starting Position
-    var StartPosition = m_poseEstimator.getEstimatedPosition();
+    var StartPosition = DDPoseEstimator.getEstimatedPosition();
     //Desired Postion
     var EndPosition = endPose;
     //Empty list of waypoints
     var interiorWaypoints = waypoints;
     //Config
     TrajectoryConfig config = new TrajectoryConfig(Units.feetToMeters(TrajectoryConstants.kMaxSpeedMetersPerSecond), Units.feetToMeters(TrajectoryConstants.kMaxAccelerationMetersPerSecondSquared))
-    .setKinematics(m_driveKinematics);
+    .setKinematics(driveKinematics);
     config.setReversed(TrajectoryConstants.setReversed);
     //Initialize Traj
     var trajectory = TrajectoryGenerator.generateTrajectory(
@@ -217,13 +217,13 @@ public class Drivetrain extends SubsystemBase {
   }
 
   private void shuffleBoardInit(){
-    m_SBSensors = m_SBTab.getLayout("Sensors", BuiltInLayouts.kList)
+    SBSensors = SBTab.getLayout("Sensors", BuiltInLayouts.kList)
     .withSize(2,4)
     .withPosition(0, 0);
-    m_SBSensors.add("NavX2", m_gyro).withWidget(BuiltInWidgets.kGyro);
-    m_SBSensors.add("Left Encoder", m_leftEncoder).withWidget(BuiltInWidgets.kEncoder);
-    m_SBSensors.add("Right Encoder", m_rightEncoder).withWidget(BuiltInWidgets.kEncoder);
-    m_SBTab.add("Pose Estimate", m_robotField2d).withWidget(BuiltInWidgets.kField)
+    SBSensors.add("NavX2", gyro).withWidget(BuiltInWidgets.kGyro);
+    SBSensors.add("Left Encoder", leftEncoder).withWidget(BuiltInWidgets.kEncoder);
+    SBSensors.add("Right Encoder", rightEncoder).withWidget(BuiltInWidgets.kEncoder);
+    SBTab.add("Pose Estimate", robotField2d).withWidget(BuiltInWidgets.kField)
       .withSize(7, 4)
       .withPosition(2, 0);
   }
@@ -231,22 +231,23 @@ public class Drivetrain extends SubsystemBase {
   @Override
   public void periodic() {
     //Update pose estimator with odometry
-    m_poseEstimator.updateWithTime(
+    DDPoseEstimator.updateWithTime(
       Timer.getFPGATimestamp(),
       new Rotation2d(getAngle()),
       getLeftDistance(), 
       getRightDistance());
-    m_robotField2d.setRobotPose(m_poseEstimator.getEstimatedPosition());
+    robotField2d.setRobotPose(DDPoseEstimator.getEstimatedPosition());
 
     //Get vision measurement and pass it to pose estimator
-    robotPoseEstimator.setReferencePose(m_poseEstimator.getEstimatedPosition());
-    Optional<Pair<Pose3d, Double>> result = robotPoseEstimator.update();
-    if (result.isPresent()) {
-      m_poseEstimator.addVisionMeasurement(
+    AprilTagPoseEstimator.setReferencePose(DDPoseEstimator.getEstimatedPosition());
+    Optional<Pair<Pose3d, Double>> result = AprilTagPoseEstimator.update();
+    if(result.isPresent()) {
+      DDPoseEstimator.addVisionMeasurement(
         result.get().getFirst().toPose2d(),
         Timer.getFPGATimestamp() - result.get().getSecond());
     }
   }
+   
 
   @Override
   public void simulationPeriodic() {

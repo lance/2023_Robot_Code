@@ -21,20 +21,20 @@ import frc.robot.Constants.GamePiece;
 
 public class Gripper extends SubsystemBase {
   //Initialize Motorcontroller objects
-  private final CANSparkMax m_gripperNeo1 = new CANSparkMax(CanId.gripperNeo1, MotorType.kBrushless);
-  private final CANSparkMax m_gripperNeo2 = new CANSparkMax(CanId.gripperNeo2, MotorType.kBrushless);
+  private final CANSparkMax gripperNeo1 = new CANSparkMax(CanId.gripperNeo1, MotorType.kBrushless);
+  private final CANSparkMax gripperNeo2 = new CANSparkMax(CanId.gripperNeo2, MotorType.kBrushless);
   //Initialize MotorControllerGroup for gripper
-  private final MotorControllerGroup GripperControllerGroup = new MotorControllerGroup(m_gripperNeo1, m_gripperNeo2); 
+  private final MotorControllerGroup GripperControllerGroup = new MotorControllerGroup(gripperNeo1, gripperNeo2); 
 
-  private PicoColorSensor m_colorSensor;
+  private PicoColorSensor colorSensor;
 
   public Gripper() {
     //Sets the motor controllers to inverted if needed
-    m_gripperNeo1.setInverted(!GripperConstants.inverted);
-    m_gripperNeo2.setInverted(GripperConstants.inverted);
+    gripperNeo1.setInverted(!GripperConstants.inverted);
+    gripperNeo2.setInverted(GripperConstants.inverted);
 
-    m_colorSensor = new PicoColorSensor();
-    m_colorSensor.setDebugPrints(false);
+    colorSensor = new PicoColorSensor();
+    colorSensor.setDebugPrints(false);
   }
 
   //Sets the voltage of motors
@@ -43,20 +43,20 @@ public class Gripper extends SubsystemBase {
   }
   
   public RawColor getRawColor(){
-    return m_colorSensor.getRawColor0();
+    return colorSensor.getRawColor0();
   }
 
   public int getProximity(){
-    return m_colorSensor.getProximity0();
+    return colorSensor.getProximity0();
   }
 
   public boolean getConnected(){
-    return m_colorSensor.isSensor0Connected();
+    return colorSensor.isSensor0Connected();
   }
 
   public GamePiece getGamePiece(){
-    int proximity = m_colorSensor.getProximity0();
-    RawColor color = m_colorSensor.getRawColor0();
+    int proximity = colorSensor.getProximity0();
+    RawColor color = colorSensor.getRawColor0();
 
     if(proximity > kSensors.proximityThreshold){
         double colorRatio = (double)color.blue/(double)color.green;

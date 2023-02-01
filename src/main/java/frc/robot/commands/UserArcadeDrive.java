@@ -15,22 +15,22 @@ import frc.robot.Constants.Drivetrain.Rate;
  * Applies a nonlinear velocity mapping to the joysticks, and limits the acceleration and deceleration of the drivetrain 
  */
 public class UserArcadeDrive extends CommandBase {
-  private final Drivetrain m_drivetrain;
-  private final SplitSlewRateLimiter m_accelerationLimiter;
-  private final DoubleSupplier m_linearInput;
-  private final DoubleSupplier m_angularInput;
-  private final BooleanSupplier m_boostInput;
+  private final Drivetrain drivetrain;
+  private final SplitSlewRateLimiter accelerationLimiter;
+  private final DoubleSupplier linearInput;
+  private final DoubleSupplier angularInput;
+  private final BooleanSupplier boostInput;
 
   /** Linear supplier and angular supplier are -1 to 1 double inputs that can be passed as method references or lambda in the ctors
     Same but boolean for boost
     Drivetrain subsystem instance is passed in
   */
   public UserArcadeDrive(DoubleSupplier linearSupplier, DoubleSupplier angularSupplier, BooleanSupplier boostSupplier, Drivetrain drivetrain) {
-    m_drivetrain = drivetrain;
-    m_accelerationLimiter = new SplitSlewRateLimiter(Rate.driverAccel, Rate.driverDeccel);
-    m_linearInput = linearSupplier;
-    m_angularInput = angularSupplier;
-    m_boostInput = boostSupplier;
+    this.drivetrain = drivetrain;
+    accelerationLimiter = new SplitSlewRateLimiter(Rate.driverAccel, Rate.driverDeccel);
+    linearInput = linearSupplier;
+    angularInput = angularSupplier;
+    boostInput = boostSupplier;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
@@ -39,29 +39,29 @@ public class UserArcadeDrive extends CommandBase {
   //Turn off brakemode when command is scheduled
   @Override
   public void initialize(){
-      m_drivetrain.brakeMode(false);
+      drivetrain.brakeMode(false);
   }
 
   //Looping body of the command
   @Override
   public void execute(){
     //Clamp the inputs to the correct range, and apply the nonlinear mapping defined in Drivetrain.java
-    double xSpeed = Drivetrain.NonLinear(MathUtil.clamp(m_linearInput.getAsDouble(), -1.0, 1.0));
-    double zRotation = Drivetrain.NonLinear(MathUtil.clamp(m_angularInput.getAsDouble(), -1.0, 1.0));
+    double xSpeed = Drivetrain.NonLinear(MathUtil.clamp(linearInput.getAsDouble(), -1.0, 1.0));
+    double zRotation = Drivetrain.NonLinear(MathUtil.clamp(angularInput.getAsDouble(), -1.0, 1.0));
 
     //Calculate the linear and rotation speeds requested by the inputs using either the boost(max) range, or the driver range
-    double linearSpeed = xSpeed * (m_boostInput.getAsBoolean() ? Rate.maxSpeed : Rate.driverSpeed);
+    double linearSpeed = xSpeed * (boostInput.getAsBoolean() ? Rate.maxSpeed : Rate.driverSpeed);
     double angularSpeed = zRotation * Rate.driverAngularSpeed;
 
     //Apply the calculated speeds to the drivetrain
-    m_drivetrain.driveChassisSpeeds(new ChassisSpeeds((
-      m_boostInput.getAsBoolean() ? m_accelerationLimiter.overrideCalculate(linearSpeed): m_accelerationLimiter.calculate(linearSpeed)),
+    drivetrain.driveChassisSpeeds(new ChassisSpeeds((
+      boostInput.getAsBoolean() ? accelerationLimiter.overrideCalculate(linearSpeed): accelerationLimiter.calculate(linearSpeed)),
        0, angularSpeed));
   }
 
   //Unpower the motors when the command ends or is interuppted
   @Override
   public void end(boolean interrupted){
-    m_drivetrain.driveChassisSpeeds(new ChassisSpeeds(0,0,0));
+    drivetrain.driveChassisSpeeds(new ChassisSpeeds(0,0,0));
   }
 }

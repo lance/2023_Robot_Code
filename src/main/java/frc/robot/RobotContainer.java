@@ -20,7 +20,7 @@ public class RobotContainer {
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   @SuppressWarnings("unused")
-  private final CommandXboxController m_driverController = new CommandXboxController(OperatorInterface.primaryController);
+  private final CommandXboxController driverController = new CommandXboxController(OperatorInterface.primaryController);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {

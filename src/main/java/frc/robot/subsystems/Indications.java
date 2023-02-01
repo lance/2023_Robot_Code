@@ -15,7 +15,6 @@ import frc.robot.Constants.kSensors;
 
 public class Indications extends SubsystemBase {
 
-
  public class RGB{
    public int red;
    public int green;
@@ -34,15 +33,15 @@ public class Indications extends SubsystemBase {
  }
 
 
- private AddressableLED m_LedStrip;
- private AddressableLEDBuffer m_LedData;
+ private AddressableLED ledStrip;
+ private AddressableLEDBuffer ledData;
 
 
  public Indications() {
-   m_LedStrip = new AddressableLED(kSensors.ledPort);
-   m_LedData = new AddressableLEDBuffer(kSensors.ledLength);
-   m_LedStrip.setData(m_LedData);
-   m_LedStrip.start();
+   ledStrip = new AddressableLED(kSensors.ledPort);
+   ledData = new AddressableLEDBuffer(kSensors.ledLength);
+   ledStrip.setData(ledData);
+   ledStrip.start();
  }
 
 
@@ -51,14 +50,14 @@ public class Indications extends SubsystemBase {
    int patternSize = 2;
 
     int offset = 0;
-    for (var i = 1; i < m_LedData.getLength(); i++) {
+    for (var i = 1; i < ledData.getLength(); i++) {
     //color 1
      if (((i + offset) % patternSize) < 1) {
-     m_LedData.setRGB(i, color1.red, color1.green, color1.blue);
+     ledData.setRGB(i, color1.red, color1.green, color1.blue);
 
      } else {
      //color 2
-     m_LedData.setRGB(i, color2.red, color2.green, color2.blue);
+     ledData.setRGB(i, color2.red, color2.green, color2.blue);
 
      }
    }
@@ -81,6 +80,3 @@ public class Indications extends SubsystemBase {
    // This method will be called once per scheduler run during simulation
  }
 }
-
-
-
