@@ -1,32 +1,27 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
-//Motor controllers
-import com.revrobotics.CANSparkMax;
-import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-//import com.revrobotics.CANSparkMaxLowLevel.ControlType;
-
 import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
-
-//Constants
+import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 
 public class Arm extends SubsystemBase {
-  //Object initialization motor controllers
-  private final CANSparkMax shoulderNeo1 = new CANSparkMax(CanId.shoulderNeo1, MotorType.kBrushless);
-  private final CANSparkMax shoulderNeo2 = new CANSparkMax(CanId.shoulderNeo2, MotorType.kBrushless);
+  // Object initialization motor controllers
+  private final CANSparkMax shoulderNeo1 =
+      new CANSparkMax(CanId.shoulderNeo1, MotorType.kBrushless);
+  private final CANSparkMax shoulderNeo2 =
+      new CANSparkMax(CanId.shoulderNeo2, MotorType.kBrushless);
   private final CANSparkMax elbowNeo = new CANSparkMax(CanId.elbowNeo, MotorType.kBrushless);
   private final WPI_TalonSRX leftLead = new WPI_TalonSRX(CanId.turret);
 
-  
   public Arm() {
     shoulderNeo2.follow(shoulderNeo1);
   }
-  
-  //Enable or disable brake mode on the motors
-  public void brakeMode(boolean mode){
+
+  // Enable or disable brake mode on the motors
+  public void brakeMode(boolean mode) {
     IdleMode nMode = IdleMode.kCoast;
     if (mode) nMode = IdleMode.kBrake;
 
@@ -34,10 +29,12 @@ public class Arm extends SubsystemBase {
     shoulderNeo2.setIdleMode(nMode);
   }
 
-  //TODO figure out how to set with current - Current PIDS
-  public void setTurretCurrent(){}
-  public void setShoulderCurrent(){}
-  public void setElbowCurrent(){}
+  // TODO figure out how to set with current - Current PIDS
+  public void setTurretCurrent() {}
+
+  public void setShoulderCurrent() {}
+
+  public void setElbowCurrent() {}
 
   @Override
   public void periodic() {

@@ -1,5 +1,3 @@
-
-
 package frc.robot;
 
 import edu.wpi.first.math.geometry.Rotation3d;
@@ -16,16 +14,18 @@ import edu.wpi.first.math.util.Units;
  * constants are needed, to reduce verbosity.
  */
 public final class Constants {
-  public static final class OperatorInterface{
+  public static final class OperatorInterface {
     public static final int primaryController = 0;
   }
+
   public static final class ArmConstants {
 
     public static final class GripperConstants {
       public static final boolean inverted = true;
     }
   }
-  public static final class CanId{
+
+  public static final class CanId {
     public static final int climberLiftLead = 1;
     public static final int climberLiftFollow = 2;
     public static final int climberRotate = 3;
@@ -47,75 +47,82 @@ public final class Constants {
     public static final int gripperNeo2 = 25;
   }
 
-  public static final class Drivetrain{
-    public static final class Feedforward{
-      //Feedforwards from sysid
-      public final class Left{
+  public static final class Drivetrain {
+    public static final class Feedforward {
+      // Feedforwards from sysid
+      public final class Left {
         public static final double kS = 0.56131;
         public static final double kV = 2.065;
         public static final double kA = 0.37539;
       }
-      public final class Right{
+
+      public final class Right {
         public static final double kS = 0.55809;
         public static final double kV = 2.0644;
         public static final double kA = 0.19512;
       }
-      
     }
-    public final class TrajectoryConstants{
+
+    public final class TrajectoryConstants {
       public static final int kMaxSpeedMetersPerSecond = 12;
       public static final int kMaxAccelerationMetersPerSecondSquared = 12;
       public static final boolean setReversed = true;
     }
-    public static final class Dimensions{
-      public static final double wheelCircumferenceMeters = Units.inchesToMeters(6*Math.PI);
-      //TODO Measure Trackwidth
+
+    public static final class Dimensions {
+      public static final double wheelCircumferenceMeters = Units.inchesToMeters(6 * Math.PI);
+      // TODO Measure Trackwidth
       public static final double trackWidthMeters = Units.inchesToMeters(30);
       public static final boolean kInvertDrive = true;
-      }
+    }
 
-    public static final class Rate{
-      //Speeds in m/s rotations in rad/s
+    public static final class Rate {
+      // Speeds in m/s rotations in rad/s
       public static final double maxSpeed = 5.45;
       public static final double driverSpeed = 4;
       public static final double driverAngularSpeed = 3;
       public static final double driverAccel = 5;
       public static final double driverDeccel = 10;
     }
-    public final class PIDs{
-      public final class Left{
+
+    public final class PIDs {
+      public final class Left {
         public static final double kS = 0.56131;
         public static final double kV = 2.065;
         public static final double kA = 0.37539;
       }
-      public final class Right{
+
+      public final class Right {
         public static final double kS = 0.55809;
         public static final double kV = 2.0644;
         public static final double kA = 0.19512;
       }
     }
-    public final class Encoders{
+
+    public final class Encoders {
       public static final int rightAPort = 2;
       public static final int rightBPort = 3;
       public static final int leftBPort = 0;
       public static final int leftAPort = 1;
-    
+
       public static final int PPR = 248;
     }
   }
 
-  public static final class Vision{
-    public static final Transform3d aprilTagCameraPositionTransform = new Transform3d( //Cam mounted facing forward, half a meter behind center, half a meter up from center.
-      new Translation3d(-0.5, 0.0, 0.5),
-      new Rotation3d(0,0,0));
+  public static final class Vision {
+    // Cam mounted facing forward, half a meter behind center, half a meter up from center.
+    public static final Transform3d aprilTagCameraPositionTransform =
+        new Transform3d(new Translation3d(-0.5, 0.0, 0.5), new Rotation3d(0, 0, 0));
   }
-  public static final class kSensors{
+
+  public static final class kSensors {
     public static final int ledPort = 0;
     public static final int ledLength = 300;
-    //For Color Sensor
+    // For Color Sensor
     public static final int proximityThreshold = 100;
   }
-  public enum GamePiece{
+
+  public enum GamePiece {
     CONE,
     KUBE,
     NONE
