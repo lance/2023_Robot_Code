@@ -61,16 +61,16 @@ public final class Constants {
   public static final class Drivetrain {
     public static final class Feedforward {
       // Feedforwards from sysid
-      public final class Left {
+      public final class Linear {
         public static final double kS = 0.56131;
         public static final double kV = 2.065;
         public static final double kA = 0.37539;
       }
 
-      public final class Right {
-        public static final double kS = 0.55809;
-        public static final double kV = 2.0644;
-        public static final double kA = 0.19512;
+      public final class Angular {
+        public static final double kS = 0.56131;
+        public static final double kV = 2.065;
+        public static final double kA = 0.37539;
       }
     }
 
@@ -89,7 +89,10 @@ public final class Constants {
 
     public static final class Rate {
       // Speeds in m/s rotations in rad/s
+      // TODO Get maxes from Sysid
       public static final double maxSpeed = 5.45;
+      public static final double maxAccel = 10;
+      public static final double maxAngularAccel = 5;
       public static final double driverSpeed = 4;
       public static final double driverAngularSpeed = 3;
       public static final double driverAccel = 5;
@@ -116,6 +119,7 @@ public final class Constants {
       public static final int leftBPort = 0;
       public static final int leftAPort = 1;
 
+      // TODO update for
       public static final int PPR = 248;
     }
   }
