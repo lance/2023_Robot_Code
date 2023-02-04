@@ -190,11 +190,11 @@ public class Drivetrain extends SubsystemBase {
             Rate.maxSpeed * leftPercent, Rate.maxSpeed * rightPercent));
   }
 
-  // Set the appropriate motor voltages for a desired set of wheel speeds
+  // Set the appropriate motor voltages for a desired set of wheel speeds (acceleration limited)
   public void driveWheelSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds) {
     // Feedforward calculated with current velocity and next velcocity with timestep of 20ms
     // (default robot loop period)
-    driveVoltages(
+    driveLimitedVoltages(
         DDFeedforward.calculate(
             getLeftVelocity(),
             wheelSpeeds.leftMetersPerSecond,
@@ -204,6 +204,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   // Set the appropriate motor voltages for a desired set of linear and angular chassis speeds
+  // (acceleration limited)
   public void driveChassisSpeeds(ChassisSpeeds chassisSpeeds) {
     driveWheelSpeeds(driveKinematics.toWheelSpeeds(chassisSpeeds));
   }
@@ -215,8 +216,17 @@ public class Drivetrain extends SubsystemBase {
   }
 
   // Drive the motors at a given voltage (DifferentialDriveWheelVoltages)
-  //  Note: limits acceleration to peak DT acceleration
   public void driveVoltages(DifferentialDriveWheelVoltages voltages) {
+    voltages =
+        accelLimiter.calculate(
+            getLeftVelocity(), getRightVelocity(), voltages.left, voltages.right);
+
+    leftMotorGroup.setVoltage(voltages.left);
+    rightMotorGroup.setVoltage(voltages.right);
+  }
+
+  // Same as driveVoltages but acceleration is limited according to the drivetrain model
+  public void driveLimitedVoltages(DifferentialDriveWheelVoltages voltages) {
     voltages =
         accelLimiter.calculate(
             getLeftVelocity(), getRightVelocity(), voltages.left, voltages.right);
