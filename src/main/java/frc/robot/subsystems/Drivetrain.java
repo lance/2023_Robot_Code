@@ -87,6 +87,7 @@ public class Drivetrain extends SubsystemBase {
           Feedforward.Angular.kV,
           Feedforward.Angular.kA,
           Dimensions.trackWidthMeters);
+  private DifferentialDriveWheelSpeeds lastSpeeds = new DifferentialDriveWheelSpeeds();
 
   private DifferentialDriveKinematics driveKinematics =
       new DifferentialDriveKinematics(Dimensions.trackWidthMeters);
@@ -196,11 +197,12 @@ public class Drivetrain extends SubsystemBase {
     // (default robot loop period)
     driveLimitedVoltages(
         DDFeedforward.calculate(
-            getLeftVelocity(),
+            lastSpeeds.leftMetersPerSecond,
             wheelSpeeds.leftMetersPerSecond,
-            getRightVelocity(),
+            lastSpeeds.rightMetersPerSecond,
             wheelSpeeds.rightMetersPerSecond,
             20 / 1000));
+    lastSpeeds = wheelSpeeds;
   }
 
   // Set the appropriate motor voltages for a desired set of linear and angular chassis speeds
@@ -280,6 +282,10 @@ public class Drivetrain extends SubsystemBase {
 
   public double getAngle() {
     return Units.degreesToRadians(-gyro.getYaw());
+  }
+
+  public Pose2d getPose() {
+    return DDPoseEstimator.getEstimatedPosition();
   }
 
   public Trajectory generateTrajectory(Pose2d endPose, ArrayList<Translation2d> waypoints) {
