@@ -2,90 +2,71 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.kSensors;
+import frc.robot.utilities.LEDSubStrip;
 
 public class Indications extends SubsystemBase {
 
-  public class IndicatorSection {
-
-    public int start;
-    public int end;
-
-    public IndicatorSection(int start, int end) {
-      this.start = start;
-      this.end = end;
-    }
-  }
-
-  public class RGB {
-    public int red;
-    public int green;
-    public int blue;
-
-    public RGB(int red, int green, int blue) {
-      this.red = red;
-      this.green = green;
-      this.blue = blue;
-    }
-  }
-
-  private AddressableLED ledStrip;
-  private AddressableLEDBuffer ledData;
+  private AddressableLED armLEDs;
+  private AddressableLEDBuffer armLEDsBuffer;
+  private LEDSubStrip proximalLeftStrip;
 
   public Indications() {
-    ledStrip = new AddressableLED(kSensors.ledPort);
-    ledData = new AddressableLEDBuffer(kSensors.ledLength);
-    ledStrip.setData(ledData);
-    ledStrip.start();
+    // TODO Add constants for start and end locations and move strip constants out of kSensors
+    armLEDs = new AddressableLED(kSensors.ledPort);
+    armLEDsBuffer = new AddressableLEDBuffer(kSensors.ledLength);
+    proximalLeftStrip = new LEDSubStrip(armLEDsBuffer, 0, 60);
+    armLEDs.setData(armLEDsBuffer);
+    armLEDs.start();
   }
 
-  public void monotone(IndicatorSection subsection, RGB color) {
-    for (int i = subsection.start; i <= subsection.end; i++) {
-      ledData.setRGB(i, color.red, color.green, color.blue);
+  public void monotone(LEDSubStrip section, Color color) {
+    for (int i = 0; i <= section.getLength(); i++) {
+      section.setLED(i, color);
     }
   }
 
-  public void alternate(IndicatorSection subsection, float interval, RGB color1, RGB color2) {
+  public void alternate(LEDSubStrip section, float interval, Color color1, Color color2) {
     // 2 Colored Pattern
-
     int patternSize = 2;
 
     // sets all of the LEDs between the first LED and the last LED indicated.
-    for (int i = subsection.start; i <= subsection.end; i++) {
+    for (int i = 0; i <= section.getLength(); i++) {
       // color 1
       if (((i + interval) % patternSize) < 1) {
-        ledData.setRGB(i, color1.red, color1.green, color1.blue);
+        section.setLED(i, color1);
 
       } else {
         // color 2
-        ledData.setRGB(i, color2.red, color2.green, color2.blue);
+        section.setLED(i, color2);
       }
     }
   }
 
-  public void flashing(IndicatorSection subsection, RGB color, int interval) {
-    for (int i = subsection.start; i <= subsection.end; i++) {
+  public void flashing(LEDSubStrip section, Color color, int interval) {
+    for (int i = 0; i <= section.getLength(); i++) {
       // turns the LEDs onn if the interval is one
       if ((interval % 2) == 1) {
-        ledData.setRGB(i, color.red, color.green, color.blue);
+        section.setLED(i, color);
       } else {
         // sets the LEDs off
-        ledData.setRGB(i, 0, 0, 0);
+        section.setRGB(i, 0, 0, 0);
       }
     }
   }
 
-  public void runway(IndicatorSection subsection, RGB color, int interval) {
-    // finds many LEDS are in the subsection
-    int sectionSize = subsection.end - subsection.start;
+  public void runway(LEDSubStrip section, Color color, int interval) {
+    // finds many LEDS are in the section
+    int sectionSize = section.getLength();
 
-    for (int i = subsection.start; i <= subsection.end; i++) {
+    for (int i = 0; i <= section.getLength(); i++) {
       // finds where is the sequence the "chasing" LED is
       if ((i % sectionSize) == interval) {
-        ledData.setRGB(i, color.red, color.green, color.blue);
+        armLEDsBuffer.setLED(i, color);
       } else {
-        ledData.setRGB(i, 0, 0, 0);
+        armLEDsBuffer.setRGB(i, 0, 0, 0);
       }
     }
   }
