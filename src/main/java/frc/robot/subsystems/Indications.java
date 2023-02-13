@@ -7,6 +7,17 @@ import frc.robot.Constants.kSensors;
 
 public class Indications extends SubsystemBase {
 
+  public class IndicatorSection {
+
+    public int start;
+    public int end;
+
+    public IndicatorSection(int start, int end) {
+      this.start = start;
+      this.end = end;
+    }
+  }
+
   public class RGB {
     public int red;
     public int green;
@@ -29,14 +40,21 @@ public class Indications extends SubsystemBase {
     ledStrip.start();
   }
 
-  public void pattern2(RGB color1, RGB color2, float colorSpeed) {
+  public void monotone(IndicatorSection subsection, RGB color) {
+    for (int i = subsection.start; i <= subsection.end; i++) {
+      ledData.setRGB(i, color.red, color.green, color.blue);
+    }
+  }
+
+  public void alternate(IndicatorSection subsection, float interval, RGB color1, RGB color2) {
     // 2 Colored Pattern
+
     int patternSize = 2;
 
-    int offset = 0;
-    for (var i = 1; i < ledData.getLength(); i++) {
+    // sets all of the LEDs between the first LED and the last LED indicated.
+    for (int i = subsection.start; i <= subsection.end; i++) {
       // color 1
-      if (((i + offset) % patternSize) < 1) {
+      if (((i + interval) % patternSize) < 1) {
         ledData.setRGB(i, color1.red, color1.green, color1.blue);
 
       } else {
@@ -44,9 +62,32 @@ public class Indications extends SubsystemBase {
         ledData.setRGB(i, color2.red, color2.green, color2.blue);
       }
     }
-    // offset to "move" the pattern
-    offset += colorSpeed;
-    offset %= patternSize;
+  }
+
+  public void flashing(IndicatorSection subsection, RGB color, int interval) {
+    for (int i = subsection.start; i <= subsection.end; i++) {
+      // turns the LEDs onn if the interval is one
+      if ((interval % 2) == 1) {
+        ledData.setRGB(i, color.red, color.green, color.blue);
+      } else {
+        // sets the LEDs off
+        ledData.setRGB(i, 0, 0, 0);
+      }
+    }
+  }
+
+  public void runway(IndicatorSection subsection, RGB color, int interval) {
+    // finds many LEDS are in the subsection
+    int sectionSize = subsection.end - subsection.start;
+
+    for (int i = subsection.start; i <= subsection.end; i++) {
+      // finds where is the sequence the "chasing" LED is
+      if ((i % sectionSize) == interval) {
+        ledData.setRGB(i, color.red, color.green, color.blue);
+      } else {
+        ledData.setRGB(i, 0, 0, 0);
+      }
+    }
   }
 
   @Override
