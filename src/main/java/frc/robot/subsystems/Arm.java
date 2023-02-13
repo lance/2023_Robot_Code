@@ -15,6 +15,8 @@ public class Arm extends SubsystemBase {
       new CANSparkMax(CanId.shoulderNeo2, MotorType.kBrushless);
   private final CANSparkMax elbowNeo = new CANSparkMax(CanId.elbowNeo, MotorType.kBrushless);
   private final WPI_TalonSRX leftLead = new WPI_TalonSRX(CanId.turret);
+  private final double As = 0.0;
+  private final double Ae = 0.0;
 
   public Arm() {
     shoulderNeo2.follow(shoulderNeo1);
@@ -45,4 +47,12 @@ public class Arm extends SubsystemBase {
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
   }
+
+
+    public void kinematics(double Lp, double Lf) {
+         
+         double xG = Lp*Math.cos(As)+Lf*Math.cos(Ae);
+         double yG = Lp*Math.sin(As)+Lf*Math.sin(Ae);
+    }
+}
 }
