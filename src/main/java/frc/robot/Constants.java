@@ -18,10 +18,15 @@ public final class Constants {
     public static final int primaryController = 0;
   }
 
+  public static final class GripperConstants {
+    public static final boolean inverted = true;
+  }
+
   public static final class ArmConstants {
 
-    public static final class GripperConstants {
-      public static final boolean inverted = true;
+    public static final class Dimensions {
+      public static final double Lp = 0.0;
+      public static final double Lf = 0.0;
     }
   }
 
