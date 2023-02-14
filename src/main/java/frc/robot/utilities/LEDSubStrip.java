@@ -12,10 +12,10 @@ import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 
 public class LEDSubStrip {
-  private int begin;
-  private int end;
-  private boolean direction;
-  private AddressableLEDBuffer stripBuffer;
+  private final int begin;
+  private final int end;
+  private final boolean direction;
+  private final AddressableLEDBuffer stripBuffer;
 
   // Full constructor with data buffer end, begining, and direction
   public LEDSubStrip(AddressableLEDBuffer stripBuffer, int begin, int end, boolean direction) {
@@ -39,6 +39,25 @@ public class LEDSubStrip {
   }
 
   /**
+   * Gets the sub section length.
+   *
+   * @return the section length
+   */
+  public int getLength() {
+    return begin - end + 1;
+  }
+
+  /**
+   * Section offset helper.
+   *
+   * @return the offset index
+   */
+  private int getOffset(int index) {
+    if (direction) return index + begin;
+    else return end - index;
+  }
+
+  /**
    * Sets a specific led in the section.
    *
    * @param index the index to write
@@ -47,8 +66,7 @@ public class LEDSubStrip {
    * @param b the b value [0-255]
    */
   public void setRGB(int index, int r, int g, int b) {
-    if (direction) stripBuffer.setRGB(index + begin, r, g, b);
-    else stripBuffer.setRGB(end - index, r, g, b);
+    stripBuffer.setRGB(getOffset(index), r, g, b);
   }
 
   /**
@@ -132,23 +150,13 @@ public class LEDSubStrip {
   }
 
   /**
-   * Gets the sub section length.
-   *
-   * @return the section length
-   */
-  public int getLength() {
-    return begin - end + 1;
-  }
-
-  /**
    * Gets the color at the specified index.
    *
    * @param index the index to get
    * @return the LED color at the specified index
    */
   public Color8Bit getLED8Bit(int index) {
-    if (direction) return stripBuffer.getLED8Bit(index + begin);
-    else return stripBuffer.getLED8Bit(end - index);
+    return stripBuffer.getLED8Bit(getOffset(index));
   }
 
   /**
@@ -158,7 +166,6 @@ public class LEDSubStrip {
    * @return the LED color at the specified index
    */
   public Color getLED(int index) {
-    if (direction) return stripBuffer.getLED(index + begin);
-    else return stripBuffer.getLED(end - index);
+    return stripBuffer.getLED(getOffset(index));
   }
 }
