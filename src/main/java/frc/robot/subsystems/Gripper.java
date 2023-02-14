@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants.GripperConstants;
 import frc.robot.Constants.CanId;
@@ -57,6 +58,11 @@ public class Gripper extends SubsystemBase {
       else if (0 < colorRatio && colorRatio < 2) return GamePiece.KUBE;
     }
     return GamePiece.NONE;
+  }
+
+  public Command intakeCommand() {
+    return this.startEnd(() -> setVoltage(3), () -> setVoltage(0))
+        .until(() -> getGamePiece() != GamePiece.NONE);
   }
 
   @Override
