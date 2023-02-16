@@ -4,9 +4,16 @@
 
 package frc.robot;
 
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.wpilibj.DataLogManager;
+import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 
 /**
  * The VM is configured to automatically run this class, and to call the functions corresponding to
@@ -29,6 +36,29 @@ public class Robot extends TimedRobot {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
     m_robotContainer = new RobotContainer();
+
+    // Simulation/Real startup behavior
+    if (Robot.isSimulation()) {
+      NetworkTableInstance instance = NetworkTableInstance.getDefault();
+      instance.stopServer();
+      // set the NT server if simulating this code.
+      // "localhost" for photon on desktop, or "photonvision.local" / "[ip-address]" for coprocessor
+      instance.setServer("127.0.0.1:5810");
+      instance.startClient4("myRobot");
+    }
+
+    DataLogManager.start();
+
+    // Log git data
+    try {
+      var buffer =
+          new BufferedReader(
+              new FileReader(new File(Filesystem.getDeployDirectory(), "gitdata.txt")));
+      DataLogManager.log(buffer.readLine());
+      buffer.close();
+    } catch (IOException e) {
+      DataLogManager.log("ERROR Can't get git data!");
+    }
   }
 
   /**
