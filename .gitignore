@@ -159,8 +159,13 @@ gradle-app.setting
 bin/
 
 # Simulation GUI and other tools window save file
+simgui*.json
 *-window.json
 .Glass/
+.OutlineViewer/
+.DataLogTool/
+.SysId/
+networktables.json
 
 #Deploy data
 src/main/deploy/gitdata.txt
