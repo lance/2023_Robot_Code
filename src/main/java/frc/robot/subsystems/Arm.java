@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ArmConstants.Dimensions;
 import frc.robot.Constants.CanId;
 
 public class Arm extends SubsystemBase {
@@ -44,5 +45,11 @@ public class Arm extends SubsystemBase {
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
+  }
+
+  public void kinematics(double theta_s, double theta_e) {
+
+    double xG = Dimensions.Lp * Math.cos(theta_s) + Dimensions.Lf * Math.cos(theta_e);
+    double yG = Dimensions.Lp * Math.sin(theta_s) + Dimensions.Lf * Math.sin(theta_e);
   }
 }
