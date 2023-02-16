@@ -8,7 +8,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.ArmConstants.GripperConstants;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
-import frc.robot.Constants.kSensors;
+import frc.robot.Constants.kGripper;
 import frc.robot.utilities.PicoColorSensor;
 import frc.robot.utilities.PicoColorSensor.RawColor;
 
@@ -25,8 +25,8 @@ public class Gripper extends SubsystemBase {
 
   public Gripper() {
     // Sets the motor controllers to inverted if needed
-    gripperNeo1.setInverted(!GripperConstants.inverted);
-    gripperNeo2.setInverted(GripperConstants.inverted);
+    gripperNeo1.setInverted(!kGripper.inverted);
+    gripperNeo2.setInverted(kGripper.inverted);
 
     colorSensor = new PicoColorSensor();
     colorSensor.setDebugPrints(false);
@@ -53,7 +53,7 @@ public class Gripper extends SubsystemBase {
     int proximity = colorSensor.getProximity0();
     RawColor color = colorSensor.getRawColor0();
 
-    if (proximity > kSensors.proximityThreshold) {
+    if (proximity > kGripper.proximityThreshold) {
       double colorRatio = (double) color.blue / (double) color.green;
       if (4 < colorRatio && colorRatio < 8) return GamePiece.CONE;
       else if (0 < colorRatio && colorRatio < 2) return GamePiece.KUBE;

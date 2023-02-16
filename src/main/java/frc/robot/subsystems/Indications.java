@@ -4,7 +4,7 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.kSensors;
+import frc.robot.Constants.kIndications;
 import frc.robot.utilities.LEDSubStrip;
 
 public class Indications extends SubsystemBase {
@@ -15,8 +15,8 @@ public class Indications extends SubsystemBase {
 
   public Indications() {
     // TODO Add constants for start and end locations and move strip constants out of kSensors
-    armLEDs = new AddressableLED(kSensors.ledPort);
-    armLEDsBuffer = new AddressableLEDBuffer(kSensors.ledLength);
+    armLEDs = new AddressableLED(kIndications.ledPort);
+    armLEDsBuffer = new AddressableLEDBuffer(kIndications.ledLength);
     proximalLeftStrip = new LEDSubStrip(armLEDsBuffer, 0, 60);
     armLEDs.setData(armLEDsBuffer);
     armLEDs.start();
