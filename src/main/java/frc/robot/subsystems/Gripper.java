@@ -7,7 +7,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
-import frc.robot.Constants.GripperConstants;
+import frc.robot.Constants.ArmConstants.GripperConstants;
 import frc.robot.Constants.kSensors;
 import frc.robot.utilities.PicoColorSensor;
 import frc.robot.utilities.PicoColorSensor.RawColor;
