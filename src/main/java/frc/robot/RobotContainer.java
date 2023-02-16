@@ -7,6 +7,8 @@ package frc.robot;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorInterface;
+import frc.robot.commands.UserArcadeDrive;
+import frc.robot.subsystems.Drivetrain;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -22,8 +24,16 @@ public class RobotContainer {
   private final CommandXboxController driverController =
       new CommandXboxController(OperatorInterface.primaryController);
 
+  private final Drivetrain drivetrain = new Drivetrain();
+
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    drivetrain.setDefaultCommand(
+        new UserArcadeDrive(
+            () -> -driverController.getLeftY(),
+            () -> -driverController.getRightX(),
+            () -> driverController.getRightTriggerAxis() > .1,
+            drivetrain));
     // Configure the trigger bindings
     configureBindings();
   }

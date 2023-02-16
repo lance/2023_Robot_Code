@@ -47,8 +47,8 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
-import frc.robot.Constants.Drivetrain.*;
-import frc.robot.Constants.Vision;
+import frc.robot.Constants.kDrivetrain.*;
+import frc.robot.Constants.kVision;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -123,8 +123,11 @@ public class Drivetrain extends SubsystemBase {
     // group selected by Constants.Drive.kInvertDrive; left = False)
     leftMotorGroup.setInverted(!Dimensions.kInvertDrive);
     rightMotorGroup.setInverted(Dimensions.kInvertDrive);
-    leftEncoder.setDistancePerPulse(Dimensions.wheelCircumferenceMeters / Encoders.PPR);
-    rightEncoder.setDistancePerPulse(Dimensions.wheelCircumferenceMeters / Encoders.PPR);
+    leftEncoder.setDistancePerPulse(
+        Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
+    rightEncoder.setDistancePerPulse(
+        Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
+    rightEncoder.setReverseDirection(true);
 
     // TODO clean up this garbage
     try {
@@ -136,7 +139,7 @@ public class Drivetrain extends SubsystemBase {
     }
     camList.add(
         new Pair<PhotonCamera, Transform3d>(
-            aprilTagCamera, Vision.aprilTagCameraPositionTransform));
+            aprilTagCamera, kVision.aprilTagCameraPositionTransform));
     AprilTagPoseEstimator =
         new RobotPoseEstimator(aprilTagFieldLayout, PoseStrategy.LOWEST_AMBIGUITY, camList);
 

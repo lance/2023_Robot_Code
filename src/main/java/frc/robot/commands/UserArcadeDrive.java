@@ -3,7 +3,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.CommandBase;
-import frc.robot.Constants.Drivetrain.Rate;
+import frc.robot.Constants.kDrivetrain.Rate;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.utilities.SplitSlewRateLimiter;
 import java.util.function.BooleanSupplier;
@@ -55,6 +55,13 @@ public class UserArcadeDrive extends CommandBase {
     double xSpeed = Drivetrain.NonLinear(MathUtil.clamp(linearInput.getAsDouble(), -1.0, 1.0));
     double zRotation = Drivetrain.NonLinear(MathUtil.clamp(angularInput.getAsDouble(), -1.0, 1.0));
 
+    if (Math.abs(xSpeed) <= .1) {
+      xSpeed = 0;
+    }
+
+    if (Math.abs(zRotation) <= .1) {
+      zRotation = 0;
+    }
     // Calculate the linear and rotation speeds requested by the inputs using either the boost(max)
     // range, or the driver range
     double linearSpeed = xSpeed * (boostInput.getAsBoolean() ? Rate.maxSpeed : Rate.driverSpeed);
