@@ -24,6 +24,12 @@ public final class Constants {
 
   public static final class ArmConstants {
 
+    public static final class GripperConstants {
+      public static final boolean inverted = true;
+      public static final int intakeVel = 3;
+      public static final int ejectVel = -3;
+    }
+
     public static final class Dimensions {
       public static final double Lp = 0.0;
       public static final double Lf = 0.0;

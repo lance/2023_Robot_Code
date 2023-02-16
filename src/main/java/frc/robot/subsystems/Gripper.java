@@ -5,14 +5,15 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.ArmConstants.GripperConstants;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
-import frc.robot.Constants.GripperConstants;
 import frc.robot.Constants.kSensors;
 import frc.robot.utilities.PicoColorSensor;
 import frc.robot.utilities.PicoColorSensor.RawColor;
 
 public class Gripper extends SubsystemBase {
+  GamePiece gameState;
   // Initialize Motorcontroller objects
   private final CANSparkMax gripperNeo1 = new CANSparkMax(CanId.gripperNeo1, MotorType.kBrushless);
   private final CANSparkMax gripperNeo2 = new CANSparkMax(CanId.gripperNeo2, MotorType.kBrushless);
@@ -61,8 +62,24 @@ public class Gripper extends SubsystemBase {
   }
 
   public Command intakeCommand() {
-    return this.startEnd(() -> setVoltage(3), () -> setVoltage(0))
+
+    return this.startEnd(
+            () -> setVoltage(GripperConstants.intakeVel),
+            () -> {
+              setVoltage(0);
+              gameState = getGamePiece();
+            })
         .until(() -> getGamePiece() != GamePiece.NONE);
+  }
+
+  public Command ejectCommand() {
+    return this.startEnd(
+            () -> setVoltage(GripperConstants.ejectVel),
+            () -> {
+              setVoltage(0);
+              gameState = getGamePiece();
+            })
+        .until(() -> getGamePiece() == GamePiece.NONE);
   }
 
   @Override
