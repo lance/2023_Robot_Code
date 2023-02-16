@@ -22,6 +22,8 @@ public final class Constants {
 
     public static final class GripperConstants {
       public static final boolean inverted = true;
+      public static final int intakeVel = 3;
+      public static final int ejectVel = -3;
     }
   }
 
