@@ -49,15 +49,15 @@ public final class Constants {
     public static final class Feedforward {
       // Feedforwards from sysid
       public final class Linear {
-        public static final double kS = 0.56131;
-        public static final double kV = 2.065;
-        public static final double kA = 0.37539;
+        public static final double kS = 0.093288;
+        public static final double kV = 1.1829;
+        public static final double kA = 0.30047;
       }
 
       public final class Angular {
-        public static final double kS = 0.56131;
-        public static final double kV = 2.065;
-        public static final double kA = 0.37539;
+        public static final double kS = 0.10491;
+        public static final double kV = 0.094751;
+        public static final double kA = 0.0065468;
       }
     }
 

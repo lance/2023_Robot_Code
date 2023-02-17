@@ -36,7 +36,7 @@ import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.SerialPort.Port;
+import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
@@ -204,7 +204,7 @@ public class Drivetrain extends SubsystemBase {
             wheelSpeeds.leftMetersPerSecond,
             lastSpeeds.rightMetersPerSecond,
             wheelSpeeds.rightMetersPerSecond,
-            20 / 1000));
+            20.0 / 1000.0));
     lastSpeeds = wheelSpeeds;
   }
 
