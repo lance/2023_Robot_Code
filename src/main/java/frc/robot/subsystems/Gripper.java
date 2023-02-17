@@ -5,7 +5,6 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.ArmConstants.GripperConstants;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.kGripper;
@@ -64,7 +63,7 @@ public class Gripper extends SubsystemBase {
   public Command intakeCommand() {
 
     return this.startEnd(
-            () -> setVoltage(GripperConstants.intakeVel),
+            () -> setVoltage(kGripper.intakeVel),
             () -> {
               setVoltage(0);
               gameState = getGamePiece();
@@ -74,7 +73,7 @@ public class Gripper extends SubsystemBase {
 
   public Command ejectCommand() {
     return this.startEnd(
-            () -> setVoltage(GripperConstants.ejectVel),
+            () -> setVoltage(kGripper.ejectVel),
             () -> {
               setVoltage(0);
               gameState = getGamePiece();
