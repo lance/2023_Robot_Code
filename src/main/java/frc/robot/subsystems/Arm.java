@@ -7,6 +7,9 @@ import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kArm.Dimensions;
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
@@ -48,8 +51,15 @@ public class Arm extends SubsystemBase {
   }
 
   public void kinematics(double theta_s, double theta_e) {
-
     double xG = Dimensions.Lp * Math.cos(theta_s) + Dimensions.Lf * Math.cos(theta_e);
     double yG = Dimensions.Lp * Math.sin(theta_s) + Dimensions.Lf * Math.sin(theta_e);
   }
+
+  public Matrix inverseKinematics(double xG,double yG){
+    double r = Math.sqrt(Math.pow(xG, 2) + Math.pow(yG, 2));
+    double theta_s = Math.atan(yG/xG) + Math.acos((Math.pow(r, 2) + Math.pow(Dimensions.Lp, 2) - Math.pow(Dimensions.Lf,2))/(2*r*Dimensions.Lp));
+    double theta_e = Math.atan(yG/xG) - Math.acos((Math.pow(r, 2) + Math.pow(Dimensions.Lf, 2) - Math.pow(Dimensions.Lp,2))/(2*r*Dimensions.Lf));
+    return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e);
+  }
+
 }
