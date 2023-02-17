@@ -4,12 +4,16 @@ import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.CanId;
-import frc.robot.Constants.kArm.Dimensions;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.numbers.N1;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants.CanId;
+import frc.robot.Constants.kArm.Dimensions;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
@@ -50,16 +54,45 @@ public class Arm extends SubsystemBase {
     // This method will be called once per scheduler run during simulation
   }
 
-  public void kinematics(double theta_s, double theta_e) {
-    double xG = Dimensions.Lp * Math.cos(theta_s) + Dimensions.Lf * Math.cos(theta_e);
-    double yG = Dimensions.Lp * Math.sin(theta_s) + Dimensions.Lf * Math.sin(theta_e);
+  public Matrix<N2, N1> kinematics(Matrix<N2, N1> matrixSE) {
+    double xG =
+        Dimensions.Lp * Math.cos(matrixSE.get(0, 0)) + Dimensions.Lf * Math.cos(matrixSE.get(1, 0));
+    double yG =
+        Dimensions.Lp * Math.sin(matrixSE.get(0, 0)) + Dimensions.Lf * Math.sin(matrixSE.get(1, 0));
+    return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
   }
 
-  public Matrix inverseKinematics(double xG,double yG){
-    double r = Math.sqrt(Math.pow(xG, 2) + Math.pow(yG, 2));
-    double theta_s = Math.atan(yG/xG) + Math.acos((Math.pow(r, 2) + Math.pow(Dimensions.Lp, 2) - Math.pow(Dimensions.Lf,2))/(2*r*Dimensions.Lp));
-    double theta_e = Math.atan(yG/xG) - Math.acos((Math.pow(r, 2) + Math.pow(Dimensions.Lf, 2) - Math.pow(Dimensions.Lp,2))/(2*r*Dimensions.Lf));
+  public Matrix<N2, N1> inverseKinematics(Matrix<N2, N1> matrixXY) {
+    double r = Math.sqrt(Math.pow(matrixXY.get(0, 0), 2) + Math.pow(matrixXY.get(1, 0), 2));
+    double theta_s =
+        Math.atan(matrixXY.get(1, 0) / matrixXY.get(0, 0))
+            + Math.acos(
+                (Math.pow(r, 2) + Math.pow(Dimensions.Lp, 2) - Math.pow(Dimensions.Lf, 2))
+                    / (2 * r * Dimensions.Lp));
+    double theta_e =
+        Math.atan(matrixXY.get(1, 0) / matrixXY.get(0, 0))
+            - Math.acos(
+                (Math.pow(r, 2) + Math.pow(Dimensions.Lf, 2) - Math.pow(Dimensions.Lp, 2))
+                    / (2 * r * Dimensions.Lf));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e);
   }
 
+  public Pair<TrapezoidProfile, TrapezoidProfile> motionProfile(
+      Matrix<N2, N1> startXY, Matrix<N2, N1> endXY) {
+    // Inverse Kinematics to get the Thetas
+    Matrix<N2, N1> initialThetas = inverseKinematics(startXY);
+    Matrix<N2, N1> endThetas = inverseKinematics(endXY);
+    // Create the Motion Profiles
+    TrapezoidProfile profileShoulder =
+        new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(0, 0), // contraints
+            new TrapezoidProfile.State(endThetas.get(0, 0), 0), // endpoint
+            new TrapezoidProfile.State(initialThetas.get(0, 0), 0)); // startpoint
+    TrapezoidProfile profileElbow =
+        new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(0, 0), // contraints
+            new TrapezoidProfile.State(endThetas.get(1, 0), 0), // endpoint
+            new TrapezoidProfile.State(initialThetas.get(1, 0), 0)); // startpoint
+    return new Pair<>(profileShoulder, profileElbow); // Return as pair
+  }
 }
