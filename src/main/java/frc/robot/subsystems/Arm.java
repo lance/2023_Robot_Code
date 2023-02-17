@@ -13,6 +13,7 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
+import frc.robot.Constants.kArm.Constraints;
 import frc.robot.Constants.kArm.Dimensions;
 
 public class Arm extends SubsystemBase {
@@ -80,17 +81,19 @@ public class Arm extends SubsystemBase {
   public Pair<TrapezoidProfile, TrapezoidProfile> motionProfile(
       Matrix<N2, N1> startXY, Matrix<N2, N1> endXY) {
     // Inverse Kinematics to get the Thetas
-    Matrix<N2, N1> initialThetas = inverseKinematics(startXY);
+    Matrix<N2, N1> initialThetas = inverseKinematics(startXY); // Shoulder, then Elbow
     Matrix<N2, N1> endThetas = inverseKinematics(endXY);
     // Create the Motion Profiles
     TrapezoidProfile profileShoulder =
         new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(0, 0), // contraints
+            new TrapezoidProfile.Constraints(
+                Constraints.Velocity, Constraints.Acceleration), // contraints
             new TrapezoidProfile.State(endThetas.get(0, 0), 0), // endpoint
             new TrapezoidProfile.State(initialThetas.get(0, 0), 0)); // startpoint
     TrapezoidProfile profileElbow =
         new TrapezoidProfile(
-            new TrapezoidProfile.Constraints(0, 0), // contraints
+            new TrapezoidProfile.Constraints(
+                Constraints.Velocity, Constraints.Acceleration), // contraints
             new TrapezoidProfile.State(endThetas.get(1, 0), 0), // endpoint
             new TrapezoidProfile.State(initialThetas.get(1, 0), 0)); // startpoint
     return new Pair<>(profileShoulder, profileElbow); // Return as pair

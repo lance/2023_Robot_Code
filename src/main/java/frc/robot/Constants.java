@@ -30,6 +30,11 @@ public final class Constants {
       public static final double Lp = 0.0;
       public static final double Lf = 0.0;
     }
+
+    public static final class Constraints {
+      public static final double Velocity = 5;
+      public static final double Acceleration = 1;
+    }
   }
 
   public static final class CanId {
