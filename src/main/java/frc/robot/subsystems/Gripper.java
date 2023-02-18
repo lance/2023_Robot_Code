@@ -85,9 +85,7 @@ public class Gripper extends SubsystemBase {
   }
 
   public Command holdCommand() {
-    return this.startEnd(
-            () -> setVoltage(kGripper.holdingVolage),
-            () -> setVoltage(0));
+    return this.startEnd(() -> setVoltage(kGripper.holdingVolage), () -> setVoltage(0));
   }
 
   @Override
