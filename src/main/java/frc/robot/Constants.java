@@ -39,8 +39,8 @@ public final class Constants {
       public static final double Velocity = 5;
       public static final double Acceleration = 1;
     }
-    
-    public static final class  ProximalConstants {
+
+    public static final class ProximalConstants {
       public static final double mass = 0.0;
       public static final double length = 0.0;
       public static final double inertia = 0.0;
@@ -48,10 +48,9 @@ public final class Constants {
       public static final double stall_torque = 0.0;
       public static final double stall_current = 0.0;
       public static final double free_speed = 0.0;
-
     }
-   
-    public static final class  ForearmConstants {
+
+    public static final class ForearmConstants {
       public static final double mass = 0.0;
       public static final double length = 0.0;
       public static final double inertia = 0.0;
@@ -59,7 +58,6 @@ public final class Constants {
       public static final double stall_torque = 0.0;
       public static final double stall_current = 0.0;
       public static final double free_speed = 0.0;
-
     }
   }
 
