@@ -92,7 +92,6 @@ public final class Constants {
       public static final double driverSpeed = 4;
       public static final double driverAngularSpeed = 3;
       public static final double driverAccel = 5;
-      public static final double driverDeccel = 10;
     }
 
     public final class PIDs {
