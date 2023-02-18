@@ -26,9 +26,12 @@ public class Gripper extends SubsystemBase {
     // Sets the motor controllers to inverted if needed
     gripperNeo1.setInverted(!kGripper.inverted);
     gripperNeo2.setInverted(kGripper.inverted);
+    gripperNeo1.setSmartCurrentLimit(kGripper.stallCurrentLimit, kGripper.freeCurrentLimit);
 
     colorSensor = new PicoColorSensor();
     colorSensor.setDebugPrints(false);
+
+    this.setDefaultCommand(holdCommand());
   }
 
   // Sets the voltage of motors
@@ -79,6 +82,16 @@ public class Gripper extends SubsystemBase {
               gameState = getGamePiece();
             })
         .until(() -> getGamePiece() == GamePiece.NONE);
+  }
+
+  public Command holdCommand() {
+    return this.startEnd(
+            () -> setVoltage(kGripper.holdingVolage),
+            () -> {
+              setVoltage(0);
+              gameState = getGamePiece();
+            })
+        .until(() -> getGamePiece() != GamePiece.NONE);
   }
 
   @Override
