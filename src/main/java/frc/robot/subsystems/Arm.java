@@ -13,8 +13,7 @@ import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
-import frc.robot.Constants.kArm.Constraints;
-import frc.robot.Constants.kArm.Dimensions;
+import frc.robot.Constants.kArm.*;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
@@ -57,9 +56,11 @@ public class Arm extends SubsystemBase {
 
   public Matrix<N2, N1> kinematics(Matrix<N2, N1> matrixSE) {
     double xG =
-        Dimensions.Lp * Math.cos(matrixSE.get(0, 0)) + Dimensions.Lf * Math.cos(matrixSE.get(1, 0));
+        Proximal.length * Math.cos(matrixSE.get(0, 0))
+            + Forearm.length * Math.cos(matrixSE.get(1, 0));
     double yG =
-        Dimensions.Lp * Math.sin(matrixSE.get(0, 0)) + Dimensions.Lf * Math.sin(matrixSE.get(1, 0));
+        Proximal.length * Math.sin(matrixSE.get(0, 0))
+            + Forearm.length * Math.sin(matrixSE.get(1, 0));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
   }
 
@@ -68,13 +69,13 @@ public class Arm extends SubsystemBase {
     double theta_s =
         Math.atan(matrixXY.get(1, 0) / matrixXY.get(0, 0))
             + Math.acos(
-                (Math.pow(r, 2) + Math.pow(Dimensions.Lp, 2) - Math.pow(Dimensions.Lf, 2))
-                    / (2 * r * Dimensions.Lp));
+                (Math.pow(r, 2) + Math.pow(Proximal.length, 2) - Math.pow(Forearm.length, 2))
+                    / (2 * r * Proximal.length));
     double theta_e =
         Math.atan(matrixXY.get(1, 0) / matrixXY.get(0, 0))
             - Math.acos(
-                (Math.pow(r, 2) + Math.pow(Dimensions.Lf, 2) - Math.pow(Dimensions.Lp, 2))
-                    / (2 * r * Dimensions.Lf));
+                (Math.pow(r, 2) + Math.pow(Forearm.length, 2) - Math.pow(Proximal.length, 2))
+                    / (2 * r * Forearm.length));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e);
   }
 

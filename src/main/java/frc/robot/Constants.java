@@ -30,34 +30,42 @@ public final class Constants {
   }
 
   public static final class kArm {
-    public static final class Dimensions {
-      public static final double Lp = 0.0;
-      public static final double Lf = 0.0;
-    }
 
     public static final class Constraints {
       public static final double Velocity = 5;
       public static final double Acceleration = 1;
     }
 
-    public static final class ProximalConstants {
-      public static final double mass = 0.0;
-      public static final double length = 0.0;
-      public static final double inertia = 0.0;
-      public static final double radius = 0.0;
+    public static final class Motors {
       public static final double stall_torque = 0.0;
       public static final double stall_current = 0.0;
       public static final double free_speed = 0.0;
     }
 
-    public static final class ForearmConstants {
+    // kg, m, kg*m^2, rad, N/m
+    public static final class Proximal {
       public static final double mass = 0.0;
       public static final double length = 0.0;
       public static final double inertia = 0.0;
       public static final double radius = 0.0;
-      public static final double stall_torque = 0.0;
-      public static final double stall_current = 0.0;
-      public static final double free_speed = 0.0;
+      public static final double gear_ratio = 0.0;
+      public static final double num_motors = 2;
+      public static final double len_pulley = 0.0;
+      public static final double len_anchor = 0.0;
+      public static final double angle_pulley = Units.degreesToRadians(15);
+      public static final double angle_anchor = Units.degreesToRadians(115);
+      public static final double k_spring = 0.0;
+    }
+
+    // kg, m, kg*m^2, rad, Nm
+    public static final class Forearm {
+      public static final double mass = 0.0;
+      public static final double length = 0.0;
+      public static final double inertia = 0.0;
+      public static final double radius = 0.0;
+      public static final double gear_ratio = 0.0;
+      public static final double num_motors = 1;
+      public static final double torque_spring = 14.915;
     }
   }
 
