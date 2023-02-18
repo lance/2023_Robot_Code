@@ -33,23 +33,21 @@ public class Robot extends TimedRobot {
    */
   @Override
   public void robotInit() {
-    // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
-    // autonomous chooser on the dashboard.
-    m_robotContainer = new RobotContainer();
-
-    // Simulation/Real startup behavior
+    // Simulation startup behavior
     if (Robot.isSimulation()) {
       NetworkTableInstance instance = NetworkTableInstance.getDefault();
       instance.stopServer();
       // set the NT server if simulating this code.
       // "localhost" for photon on desktop, or "photonvision.local" / "[ip-address]" for coprocessor
-      instance.setServer("127.0.0.1:5810");
+      instance.setServer("localhost");
       instance.startClient4("myRobot");
     }
+    // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
+    // autonomous chooser on the dashboard.
+    m_robotContainer = new RobotContainer();
 
+    // Start log and add git data
     DataLogManager.start();
-
-    // Log git data
     try {
       var buffer =
           new BufferedReader(
