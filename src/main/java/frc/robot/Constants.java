@@ -79,14 +79,14 @@ public final class Constants {
       // Feedforwards from sysid
       public final class Linear {
         public static final double kS = 0.093288;
-        public static final double kV = 1.1829;
-        public static final double kA = 0.30047;
+        public static final double kV = 2.471;
+        public static final double kA = 0.6275;
       }
 
       public final class Angular {
         public static final double kS = 0.10491;
-        public static final double kV = 0.094751;
-        public static final double kA = 0.0065468;
+        public static final double kV = 1.2427;
+        public static final double kA = 0.0859;
       }
     }
 
@@ -99,7 +99,7 @@ public final class Constants {
     public static final class Dimensions {
       public static final double wheelCircumferenceMeters = Units.inchesToMeters(6 * Math.PI);
       // TODO Measure Trackwidth
-      public static final double trackWidthMeters = Units.inchesToMeters(30);
+      public static final double trackWidthMeters = Units.inchesToMeters(26);
       public static final boolean kInvertDrive = false;
     }
 
@@ -110,7 +110,7 @@ public final class Constants {
       public static final double maxAccel = 10;
       public static final double maxAngularAccel = 5;
       public static final double driverSpeed = 4;
-      public static final double driverAngularSpeed = 3;
+      public static final double driverAngularSpeed = 6;
       public static final double driverAccel = 5;
     }
 
