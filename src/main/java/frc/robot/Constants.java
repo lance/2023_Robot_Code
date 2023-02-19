@@ -92,6 +92,13 @@ public final class Constants {
       public static final double num_motors = 1;
       public static final double torque_spring = 14.915;
     }
+
+    public static final class Feedback {
+      public static final double proximal_kP = 0;
+      public static final double proximal_kD = 0;
+      public static final double forearm_kP = 0;
+      public static final double forearm_kD = 0;
+    }
   }
 
   public static final class CanId {

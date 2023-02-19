@@ -18,6 +18,7 @@ import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kArm.*;
+import frc.robot.utilities.DoubleJointedArmController;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
@@ -41,6 +42,8 @@ public class Arm extends SubsystemBase {
 
   private final Matrix<N4, N1> setpoint;
 
+  private final DoubleJointedArmController armController;
+
   public Arm() {
     proximalNEO1.setIdleMode(IdleMode.kBrake);
     proximalNEO2.setIdleMode(IdleMode.kBrake);
@@ -57,7 +60,11 @@ public class Arm extends SubsystemBase {
     forearmEncoder.setDistancePerPulse(Math.PI * Encoders.Forearm.gear_ratio / Encoders.PPR);
     turretEncoder.setDistancePerPulse(Math.PI * Encoders.Turret.gear_ratio / Encoders.PPR);
 
-    setpoint = getMeasuredStates();
+    setpoint = getArmMeasuredStates();
+
+    armController =
+        new DoubleJointedArmController(
+            Feedback.proximal_kP, Feedback.proximal_kD, Feedback.forearm_kP, Feedback.forearm_kD);
   }
 
   public Matrix<N2, N1> kinematics(Matrix<N2, N1> matrixSE) {
@@ -106,13 +113,19 @@ public class Arm extends SubsystemBase {
     return new Pair<>(profileShoulder, profileElbow); // Return as pair
   }
 
-  private Matrix<N4, N1> getMeasuredStates() {
+  private Matrix<N4, N1> getArmMeasuredStates() {
     return new Matrix<N4, N1>(Nat.N4(), Nat.N1());
+  }
+
+  private void setArmVoltages(Matrix<N2, N1> voltages) {
+    proximalNEO1.setVoltage(voltages.get(0, 0));
+    forearmNEO.setVoltage(voltages.get(1, 0));
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
+    setArmVoltages(armController.calculate(getArmMeasuredStates(), setpoint));
   }
 
   @Override
