@@ -30,7 +30,7 @@ public class DoubleJointedArmController {
               0,
               (Forearm.gear_ratio * Forearm.num_motors * Kt) / (Kv * R));
 
-  private final ControlAffinePlantInversionFeedforward feedforward;
+  private final ControlAffinePlantInversionFeedforward<N4, N2> feedforward;
   private final PIDController proximalPID;
   private final PIDController forearmPID;
 
@@ -65,16 +65,8 @@ public class DoubleJointedArmController {
     return Math.cos(joints.get(0, 0) + joints.get(1, 0));
   }
 
-  private double s1(Matrix<N2, N1> joints) {
-    return Math.sin(joints.get(0, 0));
-  }
-
   private double s2(Matrix<N2, N1> joints) {
     return Math.sin(joints.get(1, 0));
-  }
-
-  private double s12(Matrix<N2, N1> joints) {
-    return Math.sin(joints.get(0, 0) + joints.get(1, 0));
   }
 
   // Inertia matrix
@@ -146,18 +138,38 @@ public class DoubleJointedArmController {
   }
 
   private Matrix<N4, N1> system_model(Matrix<N4, N1> x, Matrix<N2, N1> u) {
-    Matrix<N2, N1> thetaVector = x.block(Nat.N2(), Nat.N1(), 0, 0);
     Matrix<N2, N1> omegaVector = x.block(Nat.N2(), Nat.N1(), 2, 0);
 
     Matrix<N2, N1> torqueMatrix =
-        B.times(u).minus(Kb.times(omegaVector)).minus(C(x).times(omegaVector)).minus(Tg(x));
+        B.times(u)
+            .minus(Kb.times(omegaVector))
+            .minus(C(x).times(omegaVector))
+            .minus(Tg(x))
+            .plus(Tsp(x));
 
     Matrix<N2, N1> alphaVector = M(x).inv().times(torqueMatrix);
 
-    Matrix<N4, N1> x_dot = new Matrix(Nat.N4(), Nat.N1());
+    Matrix<N4, N1> x_dot = new Matrix<N4, N1>(Nat.N4(), Nat.N1());
     x_dot.assignBlock(0, 0, omegaVector);
     x_dot.assignBlock(2, 0, alphaVector);
 
     return x_dot;
+  }
+
+  public void reset(Matrix<N4, N1> x) {
+    feedforward.reset(x);
+    proximalPID.reset();
+    forearmPID.reset();
+  }
+
+  public Matrix<N2, N1> calculate(Matrix<N4, N1> measurement, Matrix<N4, N1> nextR) {
+    var FF_result = feedforward.calculate(nextR);
+    var PID_result =
+        new MatBuilder<>(Nat.N2(), Nat.N1())
+            .fill(
+                proximalPID.calculate(measurement.get(0, 0), nextR.get(0, 0)),
+                forearmPID.calculate(measurement.get(1, 0), nextR.get(1, 0)));
+
+    return FF_result.plus(PID_result);
   }
 }
