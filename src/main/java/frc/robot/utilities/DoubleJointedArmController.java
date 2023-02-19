@@ -3,11 +3,12 @@ package frc.robot.utilities;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
+import edu.wpi.first.math.controller.ControlAffinePlantInversionFeedforward;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N4;
 import frc.robot.Constants.kArm.*;
-import java.util.function.Supplier;
 
 public class DoubleJointedArmController {
   private final double Kt = Motors.stall_torque / Motors.stall_current;
@@ -29,24 +30,17 @@ public class DoubleJointedArmController {
               0,
               (Forearm.gear_ratio * Forearm.num_motors * Kt) / (Kv * R));
 
-  private final double proximal_kP;
-  private final double proximal_kD;
-  private final double forearm_kP;
-  private final double forearm_kD;
-
-  private final Supplier<Matrix<N4, N1>> state_supplier;
+  private final ControlAffinePlantInversionFeedforward feedforward;
+  private final PIDController proximalPID;
+  private final PIDController forearmPID;
 
   public DoubleJointedArmController(
-      double proximal_kP,
-      double proximal_kD,
-      double forearm_kP,
-      double forearm_kD,
-      Supplier<Matrix<N4, N1>> state_supplier) {
-    this.proximal_kP = proximal_kP;
-    this.proximal_kD = proximal_kD;
-    this.forearm_kP = forearm_kP;
-    this.forearm_kD = forearm_kD;
-    this.state_supplier = state_supplier;
+      double proximal_kP, double proximal_kD, double forearm_kP, double forearm_kD) {
+    this.feedforward =
+        new ControlAffinePlantInversionFeedforward<>(
+            Nat.N4(), Nat.N2(), this::system_model, 20.0 / 1000.0);
+    this.proximalPID = new PIDController(proximal_kP, 0, proximal_kD);
+    this.forearmPID = new PIDController(forearm_kP, 0, forearm_kD);
   }
 
   private double dis_pulley(double theta) {
@@ -83,68 +77,87 @@ public class DoubleJointedArmController {
     return Math.sin(joints.get(0, 0) + joints.get(1, 0));
   }
 
-  // Inertia matrix takes only joint angles
-  private Matrix<N2, N2> M(Matrix<N2, N1> joints) {
+  // Inertia matrix
+  private Matrix<N2, N2> M(Matrix<N4, N1> x) {
+    var angles = x.block(Nat.N2(), Nat.N1(), 0, 0);
     return new MatBuilder<>(Nat.N2(), Nat.N2())
         .fill(
             Proximal.mass * Math.pow(Proximal.radius, 2)
                 + Forearm.mass * (Math.pow(Proximal.inertia, 2) + Math.pow(Forearm.radius, 2))
                 + Proximal.inertia
                 + Forearm.inertia
-                + 2 * Forearm.mass * Forearm.inertia * Forearm.radius * c2(joints),
+                + 2 * Forearm.mass * Forearm.inertia * Forearm.radius * c2(angles),
             Forearm.mass * Math.pow(Forearm.radius, 2)
                 + Forearm.inertia
-                + Forearm.mass * Proximal.length * Forearm.radius * c2(joints),
+                + Forearm.mass * Proximal.length * Forearm.radius * c2(angles),
             Forearm.mass * Math.pow(Forearm.radius, 2)
                 + Forearm.inertia
-                + Forearm.mass * Proximal.length * Forearm.radius * c2(joints),
+                + Forearm.mass * Proximal.length * Forearm.radius * c2(angles),
             Forearm.mass * Math.pow(Forearm.radius, 2) + Forearm.inertia);
   }
 
-  // Coriolis matrix takes angles and velocities
-  private Matrix<N2, N2> C(Matrix<N4, N1> joints) {
+  // Coriolis matrix
+  private Matrix<N2, N2> C(Matrix<N4, N1> x) {
     return new MatBuilder<>(Nat.N2(), Nat.N2())
         .fill(
             -Forearm.mass
                 * Proximal.length
                 * Forearm.radius
-                * s2(joints.block(2, 1, 0, 0))
-                * joints.get(3, 0),
+                * s2(x.block(Nat.N2(), Nat.N1(), 0, 0))
+                * x.get(3, 0),
             -Forearm.mass
                 * Proximal.length
                 * Forearm.radius
-                * s2(joints.block(2, 1, 0, 0))
-                * (joints.get(2, 0) + joints.get(3, 0)),
+                * s2(x.block(Nat.N2(), Nat.N1(), 0, 0))
+                * (x.get(2, 0) + x.get(3, 0)),
             Forearm.mass
                 * Proximal.length
                 * Forearm.radius
-                * s2(joints.block(2, 1, 0, 0))
-                * joints.get(0, 0),
+                * s2(x.block(Nat.N2(), Nat.N1(), 0, 0))
+                * x.get(0, 0),
             0);
   }
-  // Gravity matrix takes joint angles
-  private Matrix<N2, N1> Tg(Matrix<N2, N1> joints) {
+  // Gravity matrix
+  private Matrix<N2, N1> Tg(Matrix<N4, N1> x) {
+    var angles = x.block(Nat.N2(), Nat.N1(), 0, 0);
     return new MatBuilder<>(Nat.N2(), Nat.N1())
         .fill(
-            (Proximal.mass * Proximal.radius + Forearm.mass * Proximal.length) * g * c1(joints)
-                + Forearm.mass * Forearm.radius * g * c12(joints),
-            Forearm.mass * Forearm.radius * g * c12(joints));
+            (Proximal.mass * Proximal.radius + Forearm.mass * Proximal.length) * g * c1(angles)
+                + Forearm.mass * Forearm.radius * g * c12(angles),
+            Forearm.mass * Forearm.radius * g * c12(angles));
   }
 
-  private Matrix<N2, N1> Tsp(Matrix<N2, N1> joints) {
-    if (joints.get(0, 0) >= Math.PI / 2) {
+  private Matrix<N2, N1> Tsp(Matrix<N4, N1> x) {
+    var angles = x.block(Nat.N2(), Nat.N1(), 0, 0);
+    if (angles.get(0, 0) >= Math.PI / 2) {
       return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(0, Forearm.torque_spring);
     } else {
       return new MatBuilder<>(Nat.N2(), Nat.N1())
           .fill(
               Proximal.k_spring
-                  * (dis_pulley(joints.get(0, 0) - dis_pulley(Math.PI / 2)))
+                  * (dis_pulley(angles.get(0, 0) - dis_pulley(Math.PI / 2)))
                   * (Proximal.len_anchor
                       * Math.sin(
-                          Proximal.angle_anchor - (joints.get(0, 0) + Proximal.angle_pulley)))
-                  / dis_pulley(joints.get(0, 0))
+                          Proximal.angle_anchor - (angles.get(0, 0) + Proximal.angle_pulley)))
+                  / dis_pulley(angles.get(0, 0))
                   * Proximal.len_pulley,
               Forearm.torque_spring);
     }
+  }
+
+  private Matrix<N4, N1> system_model(Matrix<N4, N1> x, Matrix<N2, N1> u) {
+    Matrix<N2, N1> thetaVector = x.block(Nat.N2(), Nat.N1(), 0, 0);
+    Matrix<N2, N1> omegaVector = x.block(Nat.N2(), Nat.N1(), 2, 0);
+
+    Matrix<N2, N1> torqueMatrix =
+        B.times(u).minus(Kb.times(omegaVector)).minus(C(x).times(omegaVector)).minus(Tg(x));
+
+    Matrix<N2, N1> alphaVector = M(x).inv().times(torqueMatrix);
+
+    Matrix<N4, N1> x_dot = new Matrix(Nat.N4(), Nat.N1());
+    x_dot.assignBlock(0, 0, omegaVector);
+    x_dot.assignBlock(2, 0, alphaVector);
+
+    return x_dot;
   }
 }
