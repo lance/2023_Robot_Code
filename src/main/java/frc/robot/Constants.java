@@ -42,6 +42,31 @@ public final class Constants {
       public static final double free_speed = 0.0;
     }
 
+    public static final class Encoders {
+      public static final int PPR = 1024;
+
+      public static final class Proximal {
+        public static final double gear_ratio = 1;
+        public static final int absPort = 0;
+        public static final int APort = 1;
+        public static final int BPort = 2;
+      }
+
+      public static final class Forearm {
+        public static final double gear_ratio = 1;
+        public static final int absPort = 3;
+        public static final int APort = 4;
+        public static final int BPort = 5;
+      }
+
+      public static final class Turret {
+        public static final double gear_ratio = 1;
+        public static final int absPort = 6;
+        public static final int APort = 7;
+        public static final int BPort = 8;
+      }
+    }
+
     // kg, m, kg*m^2, rad, N/m
     public static final class Proximal {
       public static final double mass = 0.0;
@@ -74,12 +99,12 @@ public final class Constants {
     public static final int leftDriveFollow = 3;
     public static final int rightDriveLead = 4;
     public static final int rightDriveFollow = 5;
-    public static final int shoulderNeo1 = 20;
-    public static final int shoulderNeo2 = 21;
-    public static final int elbowNeo = 22;
+    public static final int proximalNEO1 = 20;
+    public static final int proximalNEO2 = 21;
+    public static final int forearmNEO = 22;
     public static final int turret = 23;
-    public static final int gripperNeo1 = 24;
-    public static final int gripperNeo2 = 25;
+    public static final int gripperNEO1 = 24;
+    public static final int gripperNEO2 = 25;
   }
 
   public static final class kDrivetrain {

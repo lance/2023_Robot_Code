@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
-import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
+import com.ctre.phoenix.motorcontrol.can.TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -10,48 +11,53 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kArm.*;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
-  private final CANSparkMax shoulderNeo1 =
-      new CANSparkMax(CanId.shoulderNeo1, MotorType.kBrushless);
-  private final CANSparkMax shoulderNeo2 =
-      new CANSparkMax(CanId.shoulderNeo2, MotorType.kBrushless);
-  private final CANSparkMax elbowNeo = new CANSparkMax(CanId.elbowNeo, MotorType.kBrushless);
-  private final WPI_TalonSRX leftLead = new WPI_TalonSRX(CanId.turret);
+  private final CANSparkMax proximalNEO1 =
+      new CANSparkMax(CanId.proximalNEO1, MotorType.kBrushless);
+  private final CANSparkMax proximalNEO2 =
+      new CANSparkMax(CanId.proximalNEO2, MotorType.kBrushless);
+  private final CANSparkMax forearmNEO = new CANSparkMax(CanId.forearmNEO, MotorType.kBrushless);
+  private final TalonSRX turret = new TalonSRX(CanId.turret);
+
+  private final DutyCycleEncoder absProximalEncoder =
+      new DutyCycleEncoder(Encoders.Proximal.absPort);
+  private final DutyCycleEncoder absForearmEncoder = new DutyCycleEncoder(Encoders.Forearm.absPort);
+  private final DutyCycleEncoder absTurretEncoder = new DutyCycleEncoder(Encoders.Turret.absPort);
+
+  private final Encoder proximalEncoder =
+      new Encoder(Encoders.Proximal.APort, Encoders.Proximal.BPort);
+  private final Encoder forearmEncoder =
+      new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
+  private final Encoder turretEncoder = new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
+
+  private final Matrix<N4, N1> setpoint;
 
   public Arm() {
-    shoulderNeo2.follow(shoulderNeo1);
-  }
+    proximalNEO1.setIdleMode(IdleMode.kBrake);
+    proximalNEO2.setIdleMode(IdleMode.kBrake);
+    proximalNEO2.follow(proximalNEO1);
 
-  // Enable or disable brake mode on the motors
-  public void brakeMode(boolean mode) {
-    IdleMode nMode = IdleMode.kCoast;
-    if (mode) nMode = IdleMode.kBrake;
+    forearmNEO.setIdleMode(IdleMode.kBrake);
+    turret.setNeutralMode(NeutralMode.Brake);
 
-    shoulderNeo1.setIdleMode(nMode);
-    shoulderNeo2.setIdleMode(nMode);
-  }
+    absProximalEncoder.setDistancePerRotation(Math.PI * Encoders.Proximal.gear_ratio);
+    absForearmEncoder.setDistancePerRotation(Math.PI * Encoders.Forearm.gear_ratio);
+    absTurretEncoder.setDistancePerRotation(Math.PI * Encoders.Turret.gear_ratio);
 
-  // TODO figure out how to set with current - Current PIDS
-  public void setTurretCurrent() {}
+    proximalEncoder.setDistancePerPulse(Math.PI * Encoders.Proximal.gear_ratio / Encoders.PPR);
+    forearmEncoder.setDistancePerPulse(Math.PI * Encoders.Forearm.gear_ratio / Encoders.PPR);
+    turretEncoder.setDistancePerPulse(Math.PI * Encoders.Turret.gear_ratio / Encoders.PPR);
 
-  public void setShoulderCurrent() {}
-
-  public void setElbowCurrent() {}
-
-  @Override
-  public void periodic() {
-    // This method will be called once per scheduler run
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
+    setpoint = getMeasuredStates();
   }
 
   public Matrix<N2, N1> kinematics(Matrix<N2, N1> matrixSE) {
@@ -98,5 +104,19 @@ public class Arm extends SubsystemBase {
             new TrapezoidProfile.State(endThetas.get(1, 0), 0), // endpoint
             new TrapezoidProfile.State(initialThetas.get(1, 0), 0)); // startpoint
     return new Pair<>(profileShoulder, profileElbow); // Return as pair
+  }
+
+  private Matrix<N4, N1> getMeasuredStates() {
+    return new Matrix<N4, N1>(Nat.N4(), Nat.N1());
+  }
+
+  @Override
+  public void periodic() {
+    // This method will be called once per scheduler run
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // This method will be called once per scheduler run during simulation
   }
 }

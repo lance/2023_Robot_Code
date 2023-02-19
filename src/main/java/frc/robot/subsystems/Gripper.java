@@ -14,19 +14,19 @@ import frc.robot.utilities.PicoColorSensor.RawColor;
 public class Gripper extends SubsystemBase {
   GamePiece gameState;
   // Initialize Motorcontroller objects
-  private final CANSparkMax gripperNeo1 = new CANSparkMax(CanId.gripperNeo1, MotorType.kBrushless);
-  private final CANSparkMax gripperNeo2 = new CANSparkMax(CanId.gripperNeo2, MotorType.kBrushless);
+  private final CANSparkMax gripperNEO1 = new CANSparkMax(CanId.gripperNEO1, MotorType.kBrushless);
+  private final CANSparkMax gripperNEO2 = new CANSparkMax(CanId.gripperNEO2, MotorType.kBrushless);
   // Initialize MotorControllerGroup for gripper
   private final MotorControllerGroup GripperControllerGroup =
-      new MotorControllerGroup(gripperNeo1, gripperNeo2);
+      new MotorControllerGroup(gripperNEO1, gripperNEO2);
 
   private PicoColorSensor colorSensor;
 
   public Gripper() {
     // Sets the motor controllers to inverted if needed
-    gripperNeo1.setInverted(!kGripper.inverted);
-    gripperNeo2.setInverted(kGripper.inverted);
-    gripperNeo1.setSmartCurrentLimit(kGripper.stallCurrentLimit, kGripper.freeCurrentLimit);
+    gripperNEO1.setInverted(!kGripper.inverted);
+    gripperNEO2.setInverted(kGripper.inverted);
+    gripperNEO1.setSmartCurrentLimit(kGripper.stallCurrentLimit, kGripper.freeCurrentLimit);
 
     colorSensor = new PicoColorSensor();
     colorSensor.setDebugPrints(false);
