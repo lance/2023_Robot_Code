@@ -1,12 +1,10 @@
 package frc.robot.commands;
 
-import edu.wpi.first.wpilibj2.command.CommandBase;
-
 import com.pathplanner.lib.PathPlannerTrajectory;
 import com.pathplanner.lib.server.PathPlannerServer;
-import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
 import edu.wpi.first.math.controller.LTVDifferentialDriveController;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -18,13 +16,13 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import frc.robot.subsystems.Drivetrain;
 
-public class PPLTVControllerCommand extends CommandBase{
-    private final Timer timer = new Timer();
+public class PPLTVControllerCommand extends CommandBase {
+  private final Timer timer = new Timer();
   private final boolean usePID;
   private final PathPlannerTrajectory trajectory;
   private final Supplier<Pose2d> poseSupplier;
@@ -45,9 +43,9 @@ public class PPLTVControllerCommand extends CommandBase{
   private static Consumer<PathPlannerTrajectory> logActiveTrajectory = null;
   private static Consumer<Pose2d> logTargetPose = null;
   private static Consumer<ChassisSpeeds> logSetpoint = null;
-  private static BiConsumer<Translation2d, Rotation2d> logError = PPLTVControllerCommand::defaultLogError;
+  private static BiConsumer<Translation2d, Rotation2d> logError =
+      PPLTVControllerCommand::defaultLogError;
 
-  
   /**
    * Constructs a new PPRamseteCommand that, when executed, will follow the provided trajectory. PID
    * control and feedforward are handled internally, and outputs are scaled -12 to 12 representing
@@ -287,16 +285,21 @@ public class PPLTVControllerCommand extends CommandBase{
 
     PathPlannerServer.sendPathFollowingData(desiredState.poseMeters, currentPose);
 
-    DifferentialDriveWheelVoltages targetDifferentialDriveWheelVoltages = this.controller.calculate(currentPose,this.speedsSupplier.get().leftMetersPerSecond,this.speedsSupplier.get().rightMetersPerSecond, desiredState);
-    
-    //double leftVoltSetpoint = targetDifferentialDriveWheelVoltages.left;
-    //double rightVoltSetpoint = targetDifferentialDriveWheelVoltages.right;
+    DifferentialDriveWheelVoltages targetDifferentialDriveWheelVoltages =
+        this.controller.calculate(
+            currentPose,
+            this.speedsSupplier.get().leftMetersPerSecond,
+            this.speedsSupplier.get().rightMetersPerSecond,
+            desiredState);
 
-    //double leftOutput;
-    //double rightOutput;
+    // double leftVoltSetpoint = targetDifferentialDriveWheelVoltages.left;
+    // double rightVoltSetpoint = targetDifferentialDriveWheelVoltages.right;
+
+    // double leftOutput;
+    // double rightOutput;
 
     this.output.accept(targetDifferentialDriveWheelVoltages);
-    //this.prevVolts = targetWheelSpeeds;
+    // this.prevVolts = targetWheelSpeeds;
     this.prevTime = currentTime;
 
     if (logTargetPose != null) {
@@ -310,7 +313,7 @@ public class PPLTVControllerCommand extends CommandBase{
     }
 
     if (logSetpoint != null) {
-      //logSetpoint.accept(targetDifferentialDriveWheelVoltages);
+      // logSetpoint.accept(targetDifferentialDriveWheelVoltages);
     }
   }
 
@@ -320,7 +323,7 @@ public class PPLTVControllerCommand extends CommandBase{
 
     if (interrupted
         || Math.abs(transformedTrajectory.getEndState().velocityMetersPerSecond) < 0.1) {
-    
+
       this.output.accept(new DifferentialDriveWheelVoltages());
     }
   }
@@ -354,10 +357,9 @@ public class PPLTVControllerCommand extends CommandBase{
       Consumer<Pose2d> logTargetPose,
       Consumer<ChassisSpeeds> logSetpoint,
       BiConsumer<Translation2d, Rotation2d> logError) {
-    //PPLTVControllerCommand.logActiveTrajectory = logActiveTrajectory;
+    // PPLTVControllerCommand.logActiveTrajectory = logActiveTrajectory;
     PPLTVControllerCommand.logTargetPose = logTargetPose;
     PPLTVControllerCommand.logSetpoint = logSetpoint;
     PPLTVControllerCommand.logError = logError;
   }
-
 }
