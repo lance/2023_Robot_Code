@@ -65,7 +65,13 @@ public class Gripper extends SubsystemBase {
 
   public Command intakeCommand(GamePiece Piece) {
     return this.startEnd(
-            () -> {if(Piece == GamePiece.CONE){setVoltage(kGripper.intakeVelCone);} else if(Piece == GamePiece.KUBE){setVoltage(kGripper.intakeVelKube);}},
+            () -> {
+              if (Piece == GamePiece.CONE) {
+                setVoltage(kGripper.intakeVelCone);
+              } else if (Piece == GamePiece.KUBE) {
+                setVoltage(kGripper.intakeVelKube);
+              }
+            },
             () -> {
               setVoltage(0);
               gameState = getGamePiece();

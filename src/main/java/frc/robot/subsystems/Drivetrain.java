@@ -222,10 +222,6 @@ public class Drivetrain extends SubsystemBase {
 
   // Drive the motors at a given voltage (DifferentialDriveWheelVoltages)
   public void driveVoltages(DifferentialDriveWheelVoltages voltages) {
-    voltages =
-        accelLimiter.calculate(
-            getLeftVelocity(), getRightVelocity(), voltages.left, voltages.right);
-
     leftMotorGroup.setVoltage(voltages.left);
     rightMotorGroup.setVoltage(voltages.right);
   }
