@@ -41,6 +41,10 @@ public class Arm extends SubsystemBase {
       new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
   private final Encoder turretEncoder = new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
 
+  private double proximalOffset;
+  private double forearmOffset;
+  private double turretOffset;
+
   private final Matrix<N4, N1> setpoint;
 
   private final DoubleJointedArmController armController;
@@ -60,6 +64,14 @@ public class Arm extends SubsystemBase {
     proximalEncoder.setDistancePerPulse(Math.PI * Encoders.Proximal.gear_ratio / Encoders.PPR);
     forearmEncoder.setDistancePerPulse(Math.PI * Encoders.Forearm.gear_ratio / Encoders.PPR);
     turretEncoder.setDistancePerPulse(Math.PI * Encoders.Turret.gear_ratio / Encoders.PPR);
+
+    proximalOffset = absProximalEncoder.getDistance() + Encoders.Proximal.initial;
+    forearmOffset = absForearmEncoder.getDistance() + Encoders.Forearm.initial;
+    turretOffset = absTurretEncoder.getDistance() + Encoders.Turret.initial;
+
+    proximalEncoder.reset();
+    forearmEncoder.reset();
+    turretEncoder.reset();
 
     setpoint = getArmMeasuredStates();
 
@@ -117,7 +129,12 @@ public class Arm extends SubsystemBase {
   }
 
   private Matrix<N4, N1> getArmMeasuredStates() {
-    return new Matrix<N4, N1>(Nat.N4(), Nat.N1());
+    return new MatBuilder<N4, N1>(Nat.N4(), Nat.N1())
+        .fill(
+            proximalEncoder.getDistance() + proximalOffset,
+            forearmEncoder.getDistance() + forearmOffset,
+            proximalEncoder.getRate(),
+            forearmEncoder.getRate());
   }
 
   private void setArmVoltages(Matrix<N2, N1> voltages) {

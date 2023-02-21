@@ -47,6 +47,7 @@ public final class Constants {
       public static final int PPR = 1024;
 
       public static final class Proximal {
+        public static final double initial = 0;
         public static final double gear_ratio = 1;
         public static final int absPort = 0;
         public static final int APort = 1;
@@ -54,6 +55,7 @@ public final class Constants {
       }
 
       public static final class Forearm {
+        public static final double initial = 0;
         public static final double gear_ratio = 1;
         public static final int absPort = 3;
         public static final int APort = 4;
@@ -61,6 +63,7 @@ public final class Constants {
       }
 
       public static final class Turret {
+        public static final double initial = 0;
         public static final double gear_ratio = 1;
         public static final int absPort = 6;
         public static final int APort = 7;
