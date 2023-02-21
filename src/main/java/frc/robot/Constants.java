@@ -26,7 +26,8 @@ public final class Constants {
     public static final boolean inverted = true;
     public static final int proximityThreshold = 100;
     // TODO Tune these constants:
-    public static final int intakeVel = 3;
+    public static final int intakeVelCone = 4;
+    public static final int intakeVelKube = 3;
     public static final int ejectVel = -3;
     public static final int holdingVolage = 5;
     public static final int stallCurrentLimit = 5;
