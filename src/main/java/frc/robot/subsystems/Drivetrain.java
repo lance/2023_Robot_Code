@@ -18,7 +18,7 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.DifferentialDriveAccelerationLimiter;
 import edu.wpi.first.math.controller.DifferentialDriveFeedforward;
 import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
-import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.LTVDifferentialDriveController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -87,6 +87,13 @@ public class Drivetrain extends SubsystemBase {
           Feedforward.Angular.kV,
           Feedforward.Angular.kA,
           Dimensions.trackWidthMeters);
+  private LTVDifferentialDriveController ltvController =
+      new LTVDifferentialDriveController(
+          drivetrainModel,
+          Dimensions.trackWidthMeters,
+          PathFollowing.qelems,
+          PathFollowing.relems,
+          20.0 / 1000.0);
   private DifferentialDriveWheelSpeeds lastSpeeds = new DifferentialDriveWheelSpeeds();
 
   private DifferentialDriveKinematics driveKinematics =
@@ -97,8 +104,6 @@ public class Drivetrain extends SubsystemBase {
           drivetrainModel, Dimensions.trackWidthMeters, Rate.maxAccel, Rate.maxAngularAccel);
 
   private DifferentialDrivePoseEstimator DDPoseEstimator;
-  private PIDController leftPIDs = new PIDController(PIDs.Left.kS, PIDs.Left.kV, PIDs.Left.kA);
-  private PIDController rightPIDs = new PIDController(PIDs.Right.kS, PIDs.Right.kV, PIDs.Right.kA);
 
   // Create encoder and gyro objects
   private Encoder leftEncoder = new Encoder(Encoders.leftAPort, Encoders.leftBPort);
@@ -175,12 +180,8 @@ public class Drivetrain extends SubsystemBase {
     linearPercent = MathUtil.clamp(linearPercent, -1, 1);
     angularPercent = MathUtil.clamp(angularPercent, -1, 1);
 
-    double maxAngularSpeed =
-        driveKinematics.toChassisSpeeds(
-                new DifferentialDriveWheelSpeeds(Rate.maxSpeed, Rate.maxSpeed))
-            .omegaRadiansPerSecond;
     driveChassisSpeeds(
-        new ChassisSpeeds(Rate.maxSpeed * linearPercent, 0, maxAngularSpeed * angularPercent));
+        new ChassisSpeeds(Rate.maxSpeed * linearPercent, 0, Rate.maxAngularSpeed * angularPercent));
   }
 
   // Simple tank drive that uses a percentage (-1.00 to 1.00) of the max left and right speeds to
@@ -236,27 +237,6 @@ public class Drivetrain extends SubsystemBase {
     rightMotorGroup.setVoltage(voltages.right);
   }
 
-  // PID Control
-  public void FeedforwardPIDControl(
-      DifferentialDriveWheelSpeeds wheelSpeeds,
-      double leftVelocitySetpoint,
-      double rightVelocitySetpoint) {
-    // Feedforward calculated with current velocity and next velcocity with timestep of 20ms
-    // (default robot loop period)
-    var feedforwardVoltages =
-        DDFeedforward.calculate(
-            getLeftVelocity(),
-            wheelSpeeds.leftMetersPerSecond,
-            getRightVelocity(),
-            wheelSpeeds.rightMetersPerSecond,
-            20 / 1000);
-
-    // Command wheel voltages
-    driveVoltages(
-        leftPIDs.calculate(leftEncoder.getRate(), leftVelocitySetpoint) + feedforwardVoltages.left,
-        rightPIDs.calculate(rightEncoder.getRate(), rightVelocitySetpoint)
-            + feedforwardVoltages.right);
-  }
   // Utility function to map joystick input nonlinearly for driver "feel"
   public static double NonLinear(double input) {
     return Math.copySign(input * input, input);
@@ -272,11 +252,11 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public double getLeftVelocity() {
-    return rightEncoder.getRate();
+    return leftEncoder.getRate();
   }
 
   public double getRightVelocity() {
-    return leftEncoder.getRate();
+    return rightEncoder.getRate();
   }
 
   public double getAngle() {
