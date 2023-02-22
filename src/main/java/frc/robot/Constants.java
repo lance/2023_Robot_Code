@@ -1,8 +1,12 @@
 package frc.robot;
 
+import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.util.Units;
 
 /**
@@ -122,14 +126,14 @@ public final class Constants {
       // Feedforwards from sysid
       public final class Linear {
         public static final double kS = 0.093288;
-        public static final double kV = 2.471;
-        public static final double kA = 0.6275;
+        public static final double kV = 2.507;
+        public static final double kA = 0.23549;
       }
 
       public final class Angular {
         public static final double kS = 0.10491;
-        public static final double kV = 1.2427;
-        public static final double kA = 0.0859;
+        public static final double kV = 2.5962;
+        public static final double kA = 0.13804;
       }
     }
 
@@ -141,34 +145,25 @@ public final class Constants {
 
     public static final class Dimensions {
       public static final double wheelCircumferenceMeters = Units.inchesToMeters(6 * Math.PI);
-      // TODO Measure Trackwidth
-      public static final double trackWidthMeters = Units.inchesToMeters(26);
+      public static final double trackWidthMeters = 0.58208;
       public static final boolean kInvertDrive = false;
     }
 
     public static final class Rate {
       // Speeds in m/s rotations in rad/s
-      // TODO Get maxes from Sysid
-      public static final double maxSpeed = 5.45;
-      public static final double maxAccel = 10;
-      public static final double maxAngularAccel = 5;
-      public static final double driverSpeed = 4;
-      public static final double driverAngularSpeed = 6;
-      public static final double driverAccel = 5;
+      public static final double maxSpeed = 4.7;
+      public static final double maxAccel = 0.9 * 9.81;
+      public static final double maxAngularSpeed = 8;
+      public static final double maxAngularAccel = 15;
+      public static final double driverSpeed = 3.5;
+      public static final double driverAngularSpeed = 4;
+      public static final double driverAccel = 4;
     }
 
-    public final class PIDs {
-      public final class Left {
-        public static final double kS = 0.56131;
-        public static final double kV = 2.065;
-        public static final double kA = 0.37539;
-      }
-
-      public final class Right {
-        public static final double kS = 0.55809;
-        public static final double kV = 2.0644;
-        public static final double kA = 0.19512;
-      }
+    public static final class PathFollowing {
+      public static final Vector<N5> qelems =
+          VecBuilder.fill(.075, .075, Units.degreesToRadians(3), .1, .1);
+      public static final Vector<N2> relems = VecBuilder.fill(12.0, 12.0);
     }
 
     public final class Encoders {
