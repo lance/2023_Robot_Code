@@ -11,6 +11,7 @@ import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
@@ -79,14 +80,16 @@ public class Arm extends SubsystemBase {
             Feedback.proximal_kP, Feedback.proximal_kD, Feedback.forearm_kP, Feedback.forearm_kD);
   }
 
-  public Matrix<N2, N1> kinematics(Matrix<N2, N1> matrixSE) {
+  public Matrix<N3, N1> kinematics(Matrix<N3, N1> matrixSETurret) {
     double xG =
-        Proximal.length * Math.cos(matrixSE.get(0, 0))
-            + Forearm.length * Math.cos(matrixSE.get(1, 0));
-    double yG =
-        Proximal.length * Math.sin(matrixSE.get(0, 0))
-            + Forearm.length * Math.sin(matrixSE.get(1, 0));
-    return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
+        (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
+            + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))*Math.cos(matrixSETurret.get(2,0));
+    double yG = (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
+            + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))*Math.sin(matrixSETurret.get(2,0));
+    double zG =
+        Proximal.length * Math.sin(matrixSETurret.get(0, 0))
+            + Forearm.length * Math.sin(matrixSETurret.get(1, 0));
+    return new MatBuilder<>(Nat.N3(), Nat.N1()).fill(xG, yG, zG);
   }
 
   public Matrix<N2, N1> inverseKinematics(Matrix<N2, N1> matrixXY) {
