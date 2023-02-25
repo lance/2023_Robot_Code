@@ -83,9 +83,12 @@ public class Arm extends SubsystemBase {
   public Matrix<N3, N1> kinematics(Matrix<N3, N1> matrixSETurret) {
     double xG =
         (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
-            + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))*Math.cos(matrixSETurret.get(2,0));
-    double yG = (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
-            + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))*Math.sin(matrixSETurret.get(2,0));
+                + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))
+            * Math.cos(matrixSETurret.get(2, 0));
+    double yG =
+        (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
+                + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))
+            * Math.sin(matrixSETurret.get(2, 0));
     double zG =
         Proximal.length * Math.sin(matrixSETurret.get(0, 0))
             + Forearm.length * Math.sin(matrixSETurret.get(1, 0));
