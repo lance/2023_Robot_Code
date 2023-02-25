@@ -118,7 +118,7 @@ public class Drivetrain extends SubsystemBase {
   private RobotPoseEstimator AprilTagPoseEstimator;
 
   // Shuffleboard
-  private ShuffleboardTab SBTab = Shuffleboard.getTab("Pose Estimation");
+  private ShuffleboardTab SBTab = Shuffleboard.getTab("Drivetrain");
   private ShuffleboardLayout SBSensors;
   private Field2d robotField2d = new Field2d();
 
