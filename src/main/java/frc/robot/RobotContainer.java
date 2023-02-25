@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.commands.UserArcadeDrive;
+import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
 
 /**
@@ -25,6 +26,7 @@ public class RobotContainer {
       new CommandXboxController(OperatorInterface.primaryController);
 
   private final Drivetrain drivetrain = new Drivetrain();
+  private final Arm arm = new Arm();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {

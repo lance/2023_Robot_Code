@@ -15,13 +15,22 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N4;
+import edu.wpi.first.math.system.NumericalIntegration;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
+import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
+import edu.wpi.first.wpilibj.simulation.EncoderSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kArm.*;
-import frc.robot.utilities.DoubleJointedArmController;
+import frc.robot.controls.DoubleJointedArmController;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
@@ -41,19 +50,41 @@ public class Arm extends SubsystemBase {
       new Encoder(Encoders.Proximal.APort, Encoders.Proximal.BPort);
   private final Encoder forearmEncoder =
       new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
-  private final Encoder turretEncoder = new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
+  private final Encoder turretEncoder = new Encoder(Encoders.Turret.APort, Encoders.Turret.BPort);
 
   private double proximalOffset;
   private double forearmOffset;
   private double turretOffset;
 
+<<<<<<< HEAD
   private final SimpleMotorFeedforward TurretFeedforward =
       new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
   private final PIDController TurretPID = new PIDController(Turret.kp, Turret.ki, Turret.kd);
 
   private final Matrix<N4, N1> setpoint;
+=======
+  private Matrix<N4, N1> setpoint;
+>>>>>>> d73716f (Fix some things, and add really incomplete sim setup for arm)
 
   private final DoubleJointedArmController armController;
+
+  private Mechanism2d arm2d = new Mechanism2d(4, 4);
+  private MechanismRoot2d base2d = arm2d.getRoot("Arm", .5, 0);
+  private MechanismLigament2d proximal2d =
+      base2d.append(new MechanismLigament2d("Proximal", 1.5, 60, 5, new Color8Bit(255, 255, 255)));
+  private MechanismLigament2d forearm2d =
+      proximal2d.append(
+          new MechanismLigament2d("Forearm", 1.25, -30, 3, new Color8Bit(255, 255, 255)));
+  private MechanismLigament2d gripper2d =
+      forearm2d.append(new MechanismLigament2d("Gripper", .4, -30, 2, new Color8Bit(0, 255, 0)));
+
+  private EncoderSim proximalEncoderSim = new EncoderSim(proximalEncoder);
+  private EncoderSim forearmEncoderSim = new EncoderSim(forearmEncoder);
+  private EncoderSim turretEncoderSim = new EncoderSim(turretEncoder);
+
+  // Shuffleboard
+  private ShuffleboardTab SBTab = Shuffleboard.getTab("Arm");
+  Matrix x = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.75, -1.5, 0, 0);
 
   public Arm() {
     proximalNEO1.setIdleMode(IdleMode.kBrake);
@@ -84,6 +115,8 @@ public class Arm extends SubsystemBase {
     armController =
         new DoubleJointedArmController(
             Feedback.proximal_kP, Feedback.proximal_kD, Feedback.forearm_kP, Feedback.forearm_kD);
+
+    shuffleBoardInit();
   }
 
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
@@ -161,20 +194,40 @@ public class Arm extends SubsystemBase {
     forearmNEO.setVoltage(voltages.get(1, 0));
   }
 
+<<<<<<< HEAD
   public void setTurretVoltages(double setpoint) {
     turretController.setVoltage(
         TurretFeedforward.calculate(setpoint)
             + TurretPID.calculate(turretEncoder.getRate(), setpoint));
+=======
+  public void shuffleBoardInit() {
+    SBTab.add("Arm 2d", arm2d);
+>>>>>>> d73716f (Fix some things, and add really incomplete sim setup for arm)
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
     setArmVoltages(armController.calculate(getArmMeasuredStates(), setpoint));
+    proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
+    forearm2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(1, 0)));
+    gripper2d.setAngle(
+        Units.radiansToDegrees(
+            -(getArmMeasuredStates().get(0, 0) + getArmMeasuredStates().get(1, 0))));
   }
 
   @Override
   public void simulationPeriodic() {
     // This method will be called once per scheduler run during simulation
+    var next_states =
+        NumericalIntegration.rkdp(
+            armController::system_model,
+            getArmMeasuredStates(),
+            new Matrix(Nat.N2(), Nat.N1()),
+            20.0 / 1000.0);
+    proximalEncoderSim.setDistance(next_states.get(0, 0));
+    forearmEncoderSim.setDistance(next_states.get(1, 0));
+    proximalEncoderSim.setRate(next_states.get(2, 0));
+    forearmEncoderSim.setRate(next_states.get(3, 0));
   }
 }

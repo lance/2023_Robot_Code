@@ -3,7 +3,6 @@ package frc.robot.controls;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
-import frc.robot.controls.PlantInversionFeedForwardOnCrack;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
@@ -162,8 +161,8 @@ public class DoubleJointedArmController {
     forearmPID.reset();
   }
 
-  public Matrix<N2, N1> calculate(Matrix<N4, N1> measurement, Matrix<N4, N1> r, Matrix<N4, N1> nextR) {
-    var FF_result = feedforward.calculate(r, nextR);
+  public Matrix<N2, N1> calculate(Matrix<N4, N1> measurement, Matrix<N4, N1> nextR) {
+    var FF_result = feedforward.calculate(nextR);
     var PID_result =
         new MatBuilder<>(Nat.N2(), Nat.N1())
             .fill(
