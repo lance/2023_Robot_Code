@@ -56,15 +56,11 @@ public class Arm extends SubsystemBase {
   private double forearmOffset;
   private double turretOffset;
 
-<<<<<<< HEAD
   private final SimpleMotorFeedforward TurretFeedforward =
       new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
   private final PIDController TurretPID = new PIDController(Turret.kp, Turret.ki, Turret.kd);
 
-  private final Matrix<N4, N1> setpoint;
-=======
-  private Matrix<N4, N1> setpoint;
->>>>>>> d73716f (Fix some things, and add really incomplete sim setup for arm)
+  private Matrix<N4, N1> armSetpoint;
 
   private final DoubleJointedArmController armController;
 
@@ -110,7 +106,7 @@ public class Arm extends SubsystemBase {
     forearmEncoder.reset();
     turretEncoder.reset();
 
-    setpoint = getArmMeasuredStates();
+    armSetpoint = getArmMeasuredStates();
 
     armController =
         new DoubleJointedArmController(
@@ -194,21 +190,24 @@ public class Arm extends SubsystemBase {
     forearmNEO.setVoltage(voltages.get(1, 0));
   }
 
-<<<<<<< HEAD
   public void setTurretVoltages(double setpoint) {
     turretController.setVoltage(
         TurretFeedforward.calculate(setpoint)
             + TurretPID.calculate(turretEncoder.getRate(), setpoint));
-=======
+  }
+
   public void shuffleBoardInit() {
     SBTab.add("Arm 2d", arm2d);
->>>>>>> d73716f (Fix some things, and add really incomplete sim setup for arm)
+  }
+
+  public void setArmSetpoint(Matrix<N4, N1> setpoint) {
+    armSetpoint = setpoint;
   }
 
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
-    setArmVoltages(armController.calculate(getArmMeasuredStates(), setpoint));
+    setArmVoltages(armController.calculate(getArmMeasuredStates(), armSetpoint));
     proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
     forearm2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(1, 0)));
     gripper2d.setAngle(
