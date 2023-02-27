@@ -31,7 +31,7 @@ public class Gripper extends SubsystemBase {
     colorSensor = new PicoColorSensor();
     colorSensor.setDebugPrints(false);
 
-    this.setDefaultCommand(holdCommand());
+    this.setDefaultCommand(holdCommand(getGamePiece()));
   }
 
   // Sets the voltage of motors
@@ -89,8 +89,18 @@ public class Gripper extends SubsystemBase {
         .until(() -> getGamePiece() == GamePiece.NONE);
   }
 
-  public Command holdCommand() {
-    return this.startEnd(() -> setVoltage(kGripper.holdingVolage), () -> setVoltage(0));
+  public Command holdCommand(GamePiece Piece) {
+    return this.startEnd(
+        () -> {
+          if (Piece == GamePiece.CONE) {
+            setVoltage(kGripper.holdingVolageCone);
+          } else if (Piece == GamePiece.KUBE) {
+            setVoltage(kGripper.holdingVolageKube);
+          }
+        },
+        () -> {
+          setVoltage(0);
+        });
   }
 
   @Override
