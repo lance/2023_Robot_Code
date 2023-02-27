@@ -30,6 +30,6 @@ public class ArmTrajectoryCommand extends CommandBase {
 
   @Override
   public boolean isFinished() {
-    return trajectory.getTotalTimeSeconds() > (WPIUtilJNI.now() * 1e-6) - startTime;
+    return trajectory.getTotalTimeSeconds() < (WPIUtilJNI.now() * 1e-6) - startTime;
   }
 }

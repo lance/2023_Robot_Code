@@ -27,10 +27,13 @@ import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kArm.*;
+import frc.robot.commands.ArmTrajectoryCommand;
 import frc.robot.controls.DoubleJointedArmController;
+import frc.robot.utilities.ArmTrajectory;
 
 public class Arm extends SubsystemBase {
   // Object initialization motor controllers
@@ -107,6 +110,8 @@ public class Arm extends SubsystemBase {
     turretEncoder.reset();
 
     armSetpoint = getArmMeasuredStates();
+    armSetpoint.assignBlock(
+        0, 0, inverseKinematics(new MatBuilder(Nat.N2(), Nat.N1()).fill(1, 0.1)));
 
     armController =
         new DoubleJointedArmController(
@@ -118,10 +123,10 @@ public class Arm extends SubsystemBase {
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
     double xG =
         Proximal.length * Math.cos(matrixSE.get(0, 0))
-            + Forearm.length * Math.cos(matrixSE.get(1, 0));
+            + Forearm.length * Math.cos(matrixSE.get(0, 0) - matrixSE.get(1, 0));
     double yG =
         Proximal.length * Math.sin(matrixSE.get(0, 0))
-            + Forearm.length * Math.sin(matrixSE.get(1, 0));
+            + Forearm.length * Math.sin(matrixSE.get(0, 0) - matrixSE.get(1, 0));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
   }
 
@@ -152,7 +157,7 @@ public class Arm extends SubsystemBase {
             - Math.acos(
                 (Math.pow(r, 2) + Math.pow(Forearm.length, 2) - Math.pow(Proximal.length, 2))
                     / (2 * r * Forearm.length));
-    return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e);
+    return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e - theta_s);
   }
 
   public Pair<TrapezoidProfile, TrapezoidProfile> motionProfile(
@@ -204,6 +209,14 @@ public class Arm extends SubsystemBase {
     armSetpoint = setpoint;
   }
 
+  public Command simpleTrajectory(double startx, double starty, double endx, double endy) {
+    var profile =
+        motionProfile(
+            new MatBuilder(Nat.N2(), Nat.N1()).fill(startx, starty),
+            new MatBuilder(Nat.N2(), Nat.N1()).fill(endx, endy));
+    return new ArmTrajectoryCommand(new ArmTrajectory(profile), this);
+  }
+
   @Override
   public void periodic() {
     // This method will be called once per scheduler run
@@ -222,7 +235,7 @@ public class Arm extends SubsystemBase {
         NumericalIntegration.rkdp(
             armController::system_model,
             getArmMeasuredStates(),
-            new Matrix(Nat.N2(), Nat.N1()),
+            armController.calculate(getArmMeasuredStates(), armSetpoint),
             20.0 / 1000.0);
     proximalEncoderSim.setDistance(next_states.get(0, 0));
     forearmEncoderSim.setDistance(next_states.get(1, 0));
