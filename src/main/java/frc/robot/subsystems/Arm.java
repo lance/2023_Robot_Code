@@ -271,6 +271,10 @@ public class Arm extends SubsystemBase {
     return new ArmTrajectoryCommand(new ArmTrajectory(profile), this);
   }
 
+  public void setArmSetpoint(Matrix<N4, N1> setpoint) {
+    armSetpoint = setpoint;
+  }
+
   @Override
   public void periodic() {
     if (proximalOffset == -1 && forearmOffset == -1 && turretOffset == -1) {
