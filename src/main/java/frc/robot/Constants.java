@@ -102,6 +102,15 @@ public final class Constants {
       public static final double torque_spring = 14.915;
     }
 
+    public static final class Turret {
+      public static final double ks = 0;
+      public static final double kv = 0;
+      public static final double ka = 0;
+      public static final double kp = 0;
+      public static final double ki = 0;
+      public static final double kd = 0;
+    }
+
     public static final class Feedback {
       public static final double proximal_kP = 0;
       public static final double proximal_kD = 0;

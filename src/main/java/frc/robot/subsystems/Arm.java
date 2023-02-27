@@ -47,8 +47,9 @@ public class Arm extends SubsystemBase {
   private double forearmOffset;
   private double turretOffset;
 
-  private final SimpleMotorFeedforward TurretFeedforward = new SimpleMotorFeedforward(0, 0, 0);
-  private final PIDController TurretPID = new PIDController(0, 0, 0);
+  private final SimpleMotorFeedforward TurretFeedforward =
+      new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
+  private final PIDController TurretPID = new PIDController(Turret.kp, Turret.ki, Turret.kd);
 
   private final Matrix<N4, N1> setpoint;
 
