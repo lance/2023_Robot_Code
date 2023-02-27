@@ -263,6 +263,10 @@ public class Drivetrain extends SubsystemBase {
     return Units.degreesToRadians(-gyro.getYaw());
   }
 
+  public double getPitch() {
+    return Units.degreesToRadians(-gyro.getPitch());
+  }
+
   public Pose2d getPose() {
     return DDPoseEstimator.getEstimatedPosition();
   }

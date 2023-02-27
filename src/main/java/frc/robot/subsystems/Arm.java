@@ -1,7 +1,7 @@
 package frc.robot.subsystems;
 
 import com.ctre.phoenix.motorcontrol.NeutralMode;
-import com.ctre.phoenix.motorcontrol.can.TalonSRX;
+import com.ctre.phoenix.motorcontrol.can.WPI_TalonSRX;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -9,6 +9,8 @@ import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Pair;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.numbers.N3;
@@ -28,7 +30,7 @@ public class Arm extends SubsystemBase {
   private final CANSparkMax proximalNEO2 =
       new CANSparkMax(CanId.proximalNEO2, MotorType.kBrushless);
   private final CANSparkMax forearmNEO = new CANSparkMax(CanId.forearmNEO, MotorType.kBrushless);
-  private final TalonSRX turret = new TalonSRX(CanId.turret);
+  private final WPI_TalonSRX turretController = new WPI_TalonSRX(CanId.turret);
 
   private final DutyCycleEncoder absProximalEncoder =
       new DutyCycleEncoder(Encoders.Proximal.absPort);
@@ -45,6 +47,9 @@ public class Arm extends SubsystemBase {
   private double forearmOffset;
   private double turretOffset;
 
+  private final SimpleMotorFeedforward TurretFeedforward = new SimpleMotorFeedforward(0, 0, 0);
+  private final PIDController TurretPID = new PIDController(0, 0, 0);
+
   private final Matrix<N4, N1> setpoint;
 
   private final DoubleJointedArmController armController;
@@ -55,7 +60,7 @@ public class Arm extends SubsystemBase {
     proximalNEO2.follow(proximalNEO1);
 
     forearmNEO.setIdleMode(IdleMode.kBrake);
-    turret.setNeutralMode(NeutralMode.Brake);
+    turretController.setNeutralMode(NeutralMode.Brake);
 
     absProximalEncoder.setDistancePerRotation(Math.PI * Encoders.Proximal.gear_ratio);
     absForearmEncoder.setDistancePerRotation(Math.PI * Encoders.Forearm.gear_ratio);
@@ -153,6 +158,12 @@ public class Arm extends SubsystemBase {
   private void setArmVoltages(Matrix<N2, N1> voltages) {
     proximalNEO1.setVoltage(voltages.get(0, 0));
     forearmNEO.setVoltage(voltages.get(1, 0));
+  }
+
+  public void setTurretVolages(double setpoint) {
+    turretController.setVoltage(
+        TurretFeedforward.calculate(setpoint)
+            + TurretPID.calculate(turretEncoder.getRate(), setpoint));
   }
 
   @Override
