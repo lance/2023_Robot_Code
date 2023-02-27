@@ -79,6 +79,7 @@ public class Arm extends SubsystemBase {
         new DoubleJointedArmController(
             Feedback.proximal_kP, Feedback.proximal_kD, Feedback.forearm_kP, Feedback.forearm_kD);
   }
+
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
     double xG =
         Proximal.length * Math.cos(matrixSE.get(0, 0))
@@ -88,12 +89,16 @@ public class Arm extends SubsystemBase {
             + Forearm.length * Math.sin(matrixSE.get(1, 0));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
   }
+
   public Matrix<N3, N1> kinematics3D(Matrix<N3, N1> matrixSETurret) {
     double xG =
         (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
-            + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))*Math.cos(matrixSETurret.get(2,0));
-    double yG = (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
-            + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))*Math.sin(matrixSETurret.get(2,0));
+                + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))
+            * Math.cos(matrixSETurret.get(2, 0));
+    double yG =
+        (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
+                + Forearm.length * Math.cos(matrixSETurret.get(1, 0)))
+            * Math.sin(matrixSETurret.get(2, 0));
     double zG =
         Proximal.length * Math.sin(matrixSETurret.get(0, 0))
             + Forearm.length * Math.sin(matrixSETurret.get(1, 0));
