@@ -101,6 +101,7 @@ public class Arm extends SubsystemBase {
     proximalNEO2.follow(proximalNEO1, true);
 
     forearmNEO.setIdleMode(IdleMode.kBrake);
+    forearmNEO.setInverted(true);
     turretController.setNeutralMode(NeutralMode.Brake);
 
     absProximalEncoder.setDistancePerRotation(-2 * Math.PI * Encoders.Proximal.gear_ratio);

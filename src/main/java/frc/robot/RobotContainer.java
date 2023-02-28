@@ -27,7 +27,6 @@ public class RobotContainer {
       new CommandXboxController(OperatorInterface.primaryController);
 
   private final Drivetrain drivetrain = new Drivetrain();
-  private final Arm arm = new Arm();
 
   @SuppressWarnings("unused")
   private final Arm arm = new Arm();
