@@ -101,6 +101,7 @@ public class Arm extends SubsystemBase {
   private ShuffleboardTab SBTab = Shuffleboard.getTab("Arm");
   private ShuffleboardLayout SBSensors;
   private ShuffleboardLayout SBMotors;
+  private ShuffleboardLayout SBState;
 
   // Logging
   private DataLog log = DataLogManager.getLog();
@@ -114,6 +115,8 @@ public class Arm extends SubsystemBase {
   private DoubleArrayLogEntry logSetpoint = new DoubleArrayLogEntry(log, "/ArmSubsystem/setpoint");
   private DoubleArrayLogEntry logCalculatedVoltages =
       new DoubleArrayLogEntry(log, "/ArmSubsystem/calculatedVoltages");
+
+  private int count = 0;
 
   public Arm() {
     proximalNEO1.setIdleMode(IdleMode.kBrake);
@@ -159,10 +162,10 @@ public class Arm extends SubsystemBase {
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
     double xG =
         Proximal.length * Math.cos(matrixSE.get(0, 0))
-            + Forearm.length * Math.cos(matrixSE.get(0, 0) - matrixSE.get(1, 0));
+            + Forearm.length * Math.cos(matrixSE.get(0, 0) + matrixSE.get(1, 0));
     double yG =
         Proximal.length * Math.sin(matrixSE.get(0, 0))
-            + Forearm.length * Math.sin(matrixSE.get(0, 0) - matrixSE.get(1, 0));
+            + Forearm.length * Math.sin(matrixSE.get(0, 0) + matrixSE.get(1, 0));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
   }
 
@@ -255,6 +258,11 @@ public class Arm extends SubsystemBase {
             .withProperties(Map.of("Number of columns", 2))
             .withSize(5, 4)
             .withPosition(2, 0);
+    SBState =
+        SBTab.getLayout("State", BuiltInLayouts.kGrid)
+            .withProperties(Map.of("Number of columns", 2))
+            .withSize(5, 4)
+            .withPosition(7, 0);
 
     SBMotors.addDouble("Shoulder Output", () -> getArmVoltages().get(0, 0));
     SBMotors.addDouble("Elbow Output", () -> getArmVoltages().get(1, 0));
@@ -272,9 +280,16 @@ public class Arm extends SubsystemBase {
     SBSensors.add("Forearm Absolute", absForearmEncoder).withPosition(1, 1);
     SBSensors.add("Turret Absolute", absTurretEncoder).withPosition(1, 2);
 
-    SBTab.addDouble("Proximal", () -> proximalEncoder.getDistance() + proximalOffset);
-    SBTab.addDouble("Forearm", () -> forearmEncoder.getDistance() + forearmOffset);
-    SBTab.addDouble("Turret", () -> turretEncoder.getDistance() + turretOffset);
+    SBState.addDouble("Proximal", () -> proximalEncoder.getDistance() + proximalOffset)
+        .withPosition(0, 0);
+    SBState.addDouble("Forearm", () -> forearmEncoder.getDistance() + forearmOffset)
+        .withPosition(0, 1);
+    SBState.addDouble("Turret", () -> turretEncoder.getDistance() + turretOffset)
+        .withPosition(0, 2);
+    SBState.addDouble("X", () -> kinematics2D(getArmMeasuredStates().block(2, 1, 0, 0)).get(0, 0))
+        .withPosition(1, 0);
+    SBState.addDouble("Y", () -> kinematics2D(getArmMeasuredStates().block(2, 1, 0, 0)).get(1, 0))
+        .withPosition(1, 1);
   }
 
   public void setArmSetpoint(Matrix<N4, N1> setpoint) {
@@ -299,13 +314,16 @@ public class Arm extends SubsystemBase {
     if (proximalOffset == -1 && forearmOffset == -1 && turretOffset == -1) {
       if (absProximalEncoder.isConnected()
           && absForearmEncoder.isConnected()
-          && absTurretEncoder.isConnected()) {
+          && absTurretEncoder.isConnected()
+          && count > 50) {
         proximalOffset =
             absProximalEncoder.getDistance() + Encoders.Proximal.initial - Encoders.Proximal.offset;
         forearmOffset =
             absForearmEncoder.getDistance() + Encoders.Forearm.initial - Encoders.Forearm.offset;
         turretOffset =
             absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
+
+        setArmSetpoint(getArmMeasuredStates());
 
         logAbsoluteEncoderValues.append(
             new double[] {
@@ -314,7 +332,7 @@ public class Arm extends SubsystemBase {
               absTurretEncoder.getDistance()
             });
         logEncoderOffsets.append(new double[] {proximalOffset, forearmOffset, turretOffset});
-      }
+      } else count++;
     }
 
     // Calculate voltages

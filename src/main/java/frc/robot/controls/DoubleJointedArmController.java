@@ -121,7 +121,8 @@ public class DoubleJointedArmController {
   private Matrix<N2, N1> Tsp(Matrix<N4, N1> x) {
     var angles = x.block(Nat.N2(), Nat.N1(), 0, 0);
     if (angles.get(0, 0) >= Math.PI / 2) {
-      return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(0, Forearm.torque_spring);
+      return new MatBuilder<>(Nat.N2(), Nat.N1())
+          .fill(0, (x.get(1, 0) < -85 ? Forearm.torque_spring : 0));
     } else {
       return new MatBuilder<>(Nat.N2(), Nat.N1())
           .fill(
@@ -132,7 +133,7 @@ public class DoubleJointedArmController {
                           Proximal.angle_anchor - (angles.get(0, 0) + Proximal.angle_pulley)))
                   / dis_pulley(angles.get(0, 0))
                   * Proximal.len_pulley,
-              Forearm.torque_spring);
+              (x.get(1, 0) < -85 ? Forearm.torque_spring : 0));
     }
   }
 

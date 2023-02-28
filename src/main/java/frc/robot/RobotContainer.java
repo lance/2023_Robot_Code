@@ -5,6 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorInterface;
@@ -62,11 +63,10 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-<<<<<<< HEAD
-    if (Robot.isReal()) return null;
-    return arm.simpleTrajectory(.1, .1, 1.2, 1.2);
-=======
-    return arm.simpleTrajectory(.15, .15, 1, 1);
->>>>>>> e2c805f (Logging is better)
+    return arm.simpleTrajectory(.12, .1, .65, .1)
+        .andThen(arm.simpleTrajectory(.65, .1, .65, 1))
+        .andThen(new WaitCommand(0.5))
+        .andThen(arm.simpleTrajectory(.65, 1, .65, .11))
+        .andThen(arm.simpleTrajectory(.65, .1, .12, .1));
   }
 }

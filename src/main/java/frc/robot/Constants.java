@@ -38,8 +38,8 @@ public final class Constants {
   public static final class kArm {
 
     public static final class Constraints {
-      public static final double Velocity = .5;
-      public static final double Acceleration = .1;
+      public static final double Velocity = 1.25;
+      public static final double Acceleration = .5;
     }
 
     public static final class Motors {
@@ -61,8 +61,8 @@ public final class Constants {
       }
 
       public static final class Forearm {
-        public static final double initial = Units.degreesToRadians(-168);
-        public static final double offset = .859;
+        public static final double initial = Units.degreesToRadians(-145);
+        public static final double offset = .6;
         public static final double gear_ratio = 16.0 / 34.0;
         public static final int absPort = 12;
         public static final int APort = 10;
@@ -115,10 +115,10 @@ public final class Constants {
     }
 
     public static final class Feedback {
-      public static final double proximal_kP = 10;
-      public static final double proximal_kD = 0;
-      public static final double forearm_kP = 10;
-      public static final double forearm_kD = 0;
+      public static final double proximal_kP = 7.5;
+      public static final double proximal_kD = 1;
+      public static final double forearm_kP = 9;
+      public static final double forearm_kD = 1;
     }
   }
 
