@@ -18,6 +18,9 @@ import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.system.NumericalIntegration;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.DoubleArrayLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.shuffleboard.BuiltInLayouts;
@@ -29,6 +32,7 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -49,6 +53,7 @@ public class Arm extends SubsystemBase {
   private final CANSparkMax forearmNEO = new CANSparkMax(CanId.forearmNEO, MotorType.kBrushless);
   private final WPI_TalonSRX turretController = new WPI_TalonSRX(CanId.turret);
 
+  // Encoder Objects
   private final DutyCycleEncoder absProximalEncoder =
       new DutyCycleEncoder(Encoders.Proximal.absPort);
   private final DutyCycleEncoder absForearmEncoder = new DutyCycleEncoder(Encoders.Forearm.absPort);
@@ -60,6 +65,11 @@ public class Arm extends SubsystemBase {
       new Encoder(Encoders.Forearm.APort, Encoders.Forearm.BPort);
   private final Encoder turretEncoder = new Encoder(Encoders.Turret.APort, Encoders.Turret.BPort);
 
+  private EncoderSim proximalEncoderSim = new EncoderSim(proximalEncoder);
+  private EncoderSim forearmEncoderSim = new EncoderSim(forearmEncoder);
+  private EncoderSim turretEncoderSim = new EncoderSim(turretEncoder);
+
+  // Offsets and states
   private double proximalOffset = -1;
   private double forearmOffset = -1;
   private double turretOffset = -1;
@@ -71,8 +81,10 @@ public class Arm extends SubsystemBase {
   private Matrix<N4, N1> armSetpoint;
   private Matrix<N4, N1> simState;
 
+  // Controls objects
   private final DoubleJointedArmController armController;
 
+  // Mechanism 2d
   private Mechanism2d arm2d = new Mechanism2d(3, 2.2);
   private MechanismRoot2d base2d = arm2d.getRoot("Arm", 1, 0.2413);
   private MechanismLigament2d proximal2d =
@@ -85,14 +97,23 @@ public class Arm extends SubsystemBase {
   private MechanismLigament2d gripper2d =
       forearm2d.append(new MechanismLigament2d("Gripper", .25, -30, 5, new Color8Bit(0, 255, 0)));
 
-  private EncoderSim proximalEncoderSim = new EncoderSim(proximalEncoder);
-  private EncoderSim forearmEncoderSim = new EncoderSim(forearmEncoder);
-  private EncoderSim turretEncoderSim = new EncoderSim(turretEncoder);
-
   // Shuffleboard
   private ShuffleboardTab SBTab = Shuffleboard.getTab("Arm");
   private ShuffleboardLayout SBSensors;
   private ShuffleboardLayout SBMotors;
+
+  // Logging
+  private DataLog log = DataLogManager.getLog();
+  private DoubleArrayLogEntry logActualVoltages =
+      new DoubleArrayLogEntry(log, "/ArmSubsystem/actualVoltages");
+  private DoubleArrayLogEntry logAbsoluteEncoderValues =
+      new DoubleArrayLogEntry(log, "/ArmSubsystem/absoluteEncoderValues");
+  private DoubleArrayLogEntry logEncoderOffsets =
+      new DoubleArrayLogEntry(log, "/ArmSubsystem/encoderOffsets");
+  private DoubleArrayLogEntry logState = new DoubleArrayLogEntry(log, "/ArmSubsystem/state");
+  private DoubleArrayLogEntry logSetpoint = new DoubleArrayLogEntry(log, "/ArmSubsystem/setpoint");
+  private DoubleArrayLogEntry logCalculatedVoltages =
+      new DoubleArrayLogEntry(log, "/ArmSubsystem/calculatedVoltages");
 
   public Arm() {
     proximalNEO1.setIdleMode(IdleMode.kBrake);
@@ -227,7 +248,7 @@ public class Arm extends SubsystemBase {
   }
 
   public void telemetryInit() {
-    SBTab.add("Arm", arm2d);
+    SmartDashboard.putData("Arm", arm2d);
     SBMotors = SBTab.getLayout("Motors", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0);
     SBSensors =
         SBTab.getLayout("Sensors", BuiltInLayouts.kGrid)
@@ -274,6 +295,7 @@ public class Arm extends SubsystemBase {
 
   @Override
   public void periodic() {
+    // Check for encoder init
     if (proximalOffset == -1 && forearmOffset == -1 && turretOffset == -1) {
       if (absProximalEncoder.isConnected()
           && absForearmEncoder.isConnected()
@@ -284,10 +306,32 @@ public class Arm extends SubsystemBase {
             absForearmEncoder.getDistance() + Encoders.Forearm.initial - Encoders.Forearm.offset;
         turretOffset =
             absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
+
+        logAbsoluteEncoderValues.append(
+            new double[] {
+              absProximalEncoder.getDistance(),
+              absForearmEncoder.getDistance(),
+              absTurretEncoder.getDistance()
+            });
+        logEncoderOffsets.append(new double[] {proximalOffset, forearmOffset, turretOffset});
       }
     }
-    // This method will be called once per scheduler run
-    setArmVoltages(armController.calculate(getArmMeasuredStates(), armSetpoint));
+
+    // Calculate voltages
+    var state = getArmMeasuredStates();
+    var voltages = armController.calculate(state, armSetpoint);
+    setArmVoltages(voltages);
+
+    // Log values and update mechanism2d
+    logSetpoint.append(
+        new double[] {
+          armSetpoint.get(0, 0), armSetpoint.get(1, 0), armSetpoint.get(2, 0), armSetpoint.get(3, 0)
+        });
+    logState.append(
+        new double[] {state.get(0, 0), state.get(1, 0), state.get(2, 0), state.get(3, 0)});
+    logCalculatedVoltages.append(new double[] {voltages.get(0, 0), voltages.get(1, 0)});
+    logActualVoltages.append(
+        new double[] {proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput()});
     proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
     forearm2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(1, 0)));
     gripper2d.setAngle(
