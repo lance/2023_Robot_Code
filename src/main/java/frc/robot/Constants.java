@@ -102,7 +102,7 @@ public final class Constants {
       public static final double radius = 0.6303518;
       public static final double gear_ratio = 140.0;
       public static final double num_motors = 1;
-      public static final double torque_spring = 0; // 14.915;
+      public static final double torque_spring = 14.915;
     }
 
     public static final class Turret {
