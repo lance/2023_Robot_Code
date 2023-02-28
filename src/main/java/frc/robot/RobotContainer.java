@@ -62,6 +62,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return null;
+    if (Robot.isReal()) return null;
+    return arm.simpleTrajectory(.1, .1, 1.2, 1.2);
   }
 }
