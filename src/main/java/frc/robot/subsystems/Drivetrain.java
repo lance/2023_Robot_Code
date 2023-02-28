@@ -199,7 +199,7 @@ public class Drivetrain extends SubsystemBase {
   public void driveWheelSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds) {
     // Feedforward calculated with current velocity and next velcocity with timestep of 20ms
     // (default robot loop period)
-    driveLimitedVoltages(
+    driveVoltages(
         DDFeedforward.calculate(
             lastSpeeds.leftMetersPerSecond,
             wheelSpeeds.leftMetersPerSecond,
