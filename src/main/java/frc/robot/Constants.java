@@ -38,8 +38,8 @@ public final class Constants {
   public static final class kArm {
 
     public static final class Constraints {
-      public static final double Velocity = 2;
-      public static final double Acceleration = .5;
+      public static final double Velocity = .5;
+      public static final double Acceleration = .1;
     }
 
     public static final class Motors {
@@ -49,58 +49,60 @@ public final class Constants {
     }
 
     public static final class Encoders {
-      public static final int PPR = 1024;
+      public static final int PPR = 2048;
 
       public static final class Proximal {
-        public static final double initial = 0;
-        public static final double gear_ratio = 1;
-        public static final int absPort = 4;
-        public static final int APort = 5;
-        public static final int BPort = 6;
+        public static final double initial = Math.PI / 2 + Units.degreesToRadians(15);
+        public static final double offset = -2.563;
+        public static final double gear_ratio = 50.0 / 18.0 * 12.0 / 44.0;
+        public static final int absPort = 9;
+        public static final int APort = 7;
+        public static final int BPort = 8;
       }
 
       public static final class Forearm {
-        public static final double initial = 0;
-        public static final double gear_ratio = 1;
-        public static final int absPort = 7;
-        public static final int APort = 8;
-        public static final int BPort = 9;
+        public static final double initial = Units.degreesToRadians(-168);
+        public static final double offset = .859;
+        public static final double gear_ratio = 16.0 / 34.0;
+        public static final int absPort = 12;
+        public static final int APort = 10;
+        public static final int BPort = 11;
       }
 
       public static final class Turret {
         public static final double initial = 0;
-        public static final double gear_ratio = 1;
-        public static final int absPort = 10;
-        public static final int APort = 11;
-        public static final int BPort = 12;
+        public static final double offset = .068;
+        public static final double gear_ratio = -15.0 / 160.0;
+        public static final int absPort = 6;
+        public static final int APort = 4;
+        public static final int BPort = 5;
       }
     }
 
     // kg, m, kg*m^2, rad, N/m
     public static final class Proximal {
-      public static final double mass = 3;
-      public static final double length = 1;
-      public static final double inertia = 1.5;
-      public static final double radius = .5;
-      public static final double gear_ratio = 320;
+      public static final double mass = 5.859506;
+      public static final double length = 0.889;
+      public static final double inertia = 0.509046682;
+      public static final double radius = 0.3504184;
+      public static final double gear_ratio = 320.0;
       public static final double num_motors = 2;
-      public static final double len_pulley = .12;
-      public static final double len_anchor = .2;
-      public static final double angle_pulley = Units.degreesToRadians(15);
-      public static final double angle_anchor = Units.degreesToRadians(115);
-      public static final double k_spring =
-          1838 * 2; // Check this because I think mr boniske is wrong, this behaves quite odd
+      public static final double len_pulley = 0.1293622;
+      public static final double len_anchor = 0.1788414;
+      public static final double angle_pulley = Units.degreesToRadians(27.5);
+      public static final double angle_anchor = Units.degreesToRadians(180 - 30);
+      public static final double k_spring = 1838 * 2;
     }
 
     // kg, m, kg*m^2, rad, Nm
     public static final class Forearm {
-      public static final double mass = 2;
-      public static final double length = 1;
-      public static final double inertia = 1;
-      public static final double radius = 0.5;
-      public static final double gear_ratio = 200;
+      public static final double mass = 4.75;
+      public static final double length = 0.8255;
+      public static final double inertia = 0.866469442;
+      public static final double radius = 0.6303518;
+      public static final double gear_ratio = 140.0;
       public static final double num_motors = 1;
-      public static final double torque_spring = 0; // 14.915;
+      public static final double torque_spring = 14.915;
     }
 
     public static final class Turret {
@@ -113,9 +115,9 @@ public final class Constants {
     }
 
     public static final class Feedback {
-      public static final double proximal_kP = 15;
+      public static final double proximal_kP = 10;
       public static final double proximal_kD = 0;
-      public static final double forearm_kP = 15;
+      public static final double forearm_kP = 10;
       public static final double forearm_kD = 0;
     }
   }
@@ -125,12 +127,12 @@ public final class Constants {
     public static final int leftDriveFollow = 3;
     public static final int rightDriveLead = 4;
     public static final int rightDriveFollow = 5;
-    public static final int proximalNEO1 = 20;
-    public static final int proximalNEO2 = 21;
-    public static final int forearmNEO = 22;
-    public static final int turret = 23;
-    public static final int gripperNEO1 = 24;
-    public static final int gripperNEO2 = 25;
+    public static final int proximalNEO1 = 6;
+    public static final int proximalNEO2 = 7;
+    public static final int forearmNEO = 8;
+    public static final int turret = 1;
+    public static final int gripperNEO1 = 9;
+    public static final int gripperNEO2 = 10;
   }
 
   public static final class kDrivetrain {

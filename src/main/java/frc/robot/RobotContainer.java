@@ -5,13 +5,13 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
+import frc.robot.subsystems.Gripper;
 
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
@@ -23,12 +23,15 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
-  @SuppressWarnings("unused")
   private final CommandXboxController driverController =
       new CommandXboxController(OperatorInterface.primaryController);
 
   private final Drivetrain drivetrain = new Drivetrain();
+
+  @SuppressWarnings("unused")
   private final Arm arm = new Arm();
+
+  private final Gripper gripper = new Gripper();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -59,8 +62,6 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return arm.simpleTrajectory(1, 0.1, .5, 1.5)
-        .andThen(new WaitCommand(0.4))
-        .andThen(arm.simpleTrajectory(.5, 1.5, 1.5, 1.25));
+    return null;
   }
 }
