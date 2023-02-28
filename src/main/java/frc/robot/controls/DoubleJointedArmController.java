@@ -24,10 +24,10 @@ public class DoubleJointedArmController {
   private final Matrix<N2, N2> B =
       new MatBuilder<>(Nat.N2(), Nat.N2())
           .fill(
-              (Proximal.gear_ratio * Proximal.num_motors * Kt) / (Kv * R),
+              (Proximal.gear_ratio * Proximal.num_motors * Kt) / R,
               0,
               0,
-              (Forearm.gear_ratio * Forearm.num_motors * Kt) / (Kv * R));
+              (Forearm.gear_ratio * Forearm.num_motors * Kt) / R);
 
   private final PlantInversionFeedForwardOnCrack<N4, N2> feedforward;
   private final PIDController proximalPID;
@@ -74,10 +74,10 @@ public class DoubleJointedArmController {
     return new MatBuilder<>(Nat.N2(), Nat.N2())
         .fill(
             Proximal.mass * Math.pow(Proximal.radius, 2)
-                + Forearm.mass * (Math.pow(Proximal.inertia, 2) + Math.pow(Forearm.radius, 2))
+                + Forearm.mass * (Math.pow(Proximal.length, 2) + Math.pow(Forearm.radius, 2))
                 + Proximal.inertia
                 + Forearm.inertia
-                + 2 * Forearm.mass * Forearm.inertia * Forearm.radius * c2(angles),
+                + 2 * Forearm.mass * Proximal.length * Forearm.radius * c2(angles),
             Forearm.mass * Math.pow(Forearm.radius, 2)
                 + Forearm.inertia
                 + Forearm.mass * Proximal.length * Forearm.radius * c2(angles),
@@ -163,6 +163,18 @@ public class DoubleJointedArmController {
 
   public Matrix<N2, N1> calculate(Matrix<N4, N1> measurement, Matrix<N4, N1> nextR) {
     var FF_result = feedforward.calculate(nextR);
+    var PID_result =
+        new MatBuilder<>(Nat.N2(), Nat.N1())
+            .fill(
+                proximalPID.calculate(measurement.get(0, 0), nextR.get(0, 0)),
+                forearmPID.calculate(measurement.get(1, 0), nextR.get(1, 0)));
+
+    return FF_result.plus(PID_result);
+  }
+
+  public Matrix<N2, N1> calculate(
+      Matrix<N4, N1> measurement, Matrix<N4, N1> r, Matrix<N4, N1> nextR) {
+    var FF_result = feedforward.calculate(r, nextR);
     var PID_result =
         new MatBuilder<>(Nat.N2(), Nat.N1())
             .fill(

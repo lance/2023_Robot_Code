@@ -43,7 +43,7 @@ public class ArmTrajectory {
       states.add(
           new State(
               t,
-              new MatBuilder(Nat.N4(), Nat.N1())
+              new MatBuilder<N4, N1>(Nat.N4(), Nat.N1())
                   .fill(
                       shoulderState.position,
                       elbowState.position,

@@ -21,6 +21,7 @@ public class ArmTrajectoryCommand extends CommandBase {
   @Override
   public void initialize() {
     startTime = WPIUtilJNI.now() * 1e-6;
+    arm.reset(trajectory.sample(0).state);
   }
 
   @Override
