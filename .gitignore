@@ -166,6 +166,7 @@ simgui*.json
 .DataLogTool/
 .SysId/
 networktables.json
+*.wpilog
 
 #Deploy data
 src/main/deploy/gitdata.txt
