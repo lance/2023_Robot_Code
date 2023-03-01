@@ -67,9 +67,9 @@ public class Gripper extends SubsystemBase {
     return this.startEnd(
             () -> {
               if (Piece == GamePiece.CONE) {
-                setVoltage(kGripper.intakeVelCone);
+                setVoltage(kGripper.intakeVoltageCone);
               } else if (Piece == GamePiece.KUBE) {
-                setVoltage(kGripper.intakeVelKube);
+                setVoltage(kGripper.intakeVoltageKube);
               }
             },
             () -> {
@@ -93,9 +93,9 @@ public class Gripper extends SubsystemBase {
     return this.startEnd(
         () -> {
           if (Piece == GamePiece.CONE) {
-            setVoltage(kGripper.holdingVolageCone);
+            setVoltage(kGripper.holdingVoltageCone);
           } else if (Piece == GamePiece.KUBE) {
-            setVoltage(kGripper.holdingVolageKube);
+            setVoltage(kGripper.holdingVoltageKube);
           }
         },
         () -> {

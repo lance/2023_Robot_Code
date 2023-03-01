@@ -26,11 +26,11 @@ public final class Constants {
     public static final boolean inverted = true;
     public static final int proximityThreshold = 100;
     // TODO Tune these constants:
-    public static final int intakeVelCone = 4;
-    public static final int intakeVelKube = 3;
+    public static final int intakeVoltageCone = 4;
+    public static final int intakeVoltageKube = 3;
     public static final int ejectVel = -3;
-    public static final int holdingVolageCone = 3;
-    public static final int holdingVolageKube = 4;
+    public static final int holdingVoltageCone = 3;
+    public static final int holdingVoltageKube = 4;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
   }

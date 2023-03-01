@@ -161,7 +161,7 @@ public class Arm extends SubsystemBase {
     forearmNEO.setVoltage(voltages.get(1, 0));
   }
 
-  public void setTurretVolages(double setpoint) {
+  public void setTurretVoltages(double setpoint) {
     turretController.setVoltage(
         TurretFeedforward.calculate(setpoint)
             + TurretPID.calculate(turretEncoder.getRate(), setpoint));
