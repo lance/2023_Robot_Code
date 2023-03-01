@@ -36,6 +36,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kArm.*;
 import frc.robot.Robot;
@@ -70,9 +72,9 @@ public class Arm extends SubsystemBase {
   private EncoderSim turretEncoderSim = new EncoderSim(turretEncoder);
 
   // Offsets and states
-  private double proximalOffset = -1;
-  private double forearmOffset = -1;
-  private double turretOffset = -1;
+  private double proximalOffset = -100;
+  private double forearmOffset = -100;
+  private double turretOffset = -100;
 
   private final SimpleMotorFeedforward TurretFeedforward =
       new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
@@ -116,8 +118,6 @@ public class Arm extends SubsystemBase {
   private DoubleArrayLogEntry logCalculatedVoltages =
       new DoubleArrayLogEntry(log, "/ArmSubsystem/calculatedVoltages");
 
-  private int count = 0;
-
   public Arm() {
     proximalNEO1.setIdleMode(IdleMode.kBrake);
     proximalNEO1.setInverted(true);
@@ -147,6 +147,16 @@ public class Arm extends SubsystemBase {
     proximalEncoder.reset();
     forearmEncoder.reset();
     turretEncoder.reset();
+
+    new WaitUntilCommand(
+            () ->
+                absProximalEncoder.isConnected()
+                    && absForearmEncoder.isConnected()
+                    && absTurretEncoder.isConnected())
+        .withTimeout(5)
+        .andThen(new WaitCommand(1))
+        .andThen(this::encoderInit)
+        .schedule();
 
     armSetpoint = getArmMeasuredStates();
     simState = armSetpoint;
@@ -227,6 +237,25 @@ public class Arm extends SubsystemBase {
             forearmEncoder.getDistance() + forearmOffset,
             proximalEncoder.getRate(),
             forearmEncoder.getRate());
+  }
+
+  private void encoderInit() {
+    proximalOffset =
+        absProximalEncoder.getDistance() + Encoders.Proximal.initial - Encoders.Proximal.offset;
+    forearmOffset =
+        absForearmEncoder.getDistance() + Encoders.Forearm.initial - Encoders.Forearm.offset;
+    turretOffset =
+        absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
+
+    setArmSetpoint(getArmMeasuredStates());
+
+    logAbsoluteEncoderValues.append(
+        new double[] {
+          absProximalEncoder.getDistance(),
+          absForearmEncoder.getDistance(),
+          absTurretEncoder.getDistance()
+        });
+    logEncoderOffsets.append(new double[] {proximalOffset, forearmOffset, turretOffset});
   }
 
   public void setVoltages(double shoulder, double elbow) {
@@ -311,29 +340,6 @@ public class Arm extends SubsystemBase {
   @Override
   public void periodic() {
     // Check for encoder init
-    if (proximalOffset == -1 && forearmOffset == -1 && turretOffset == -1) {
-      if (absProximalEncoder.isConnected()
-          && absForearmEncoder.isConnected()
-          && absTurretEncoder.isConnected()
-          && count > 50) {
-        proximalOffset =
-            absProximalEncoder.getDistance() + Encoders.Proximal.initial - Encoders.Proximal.offset;
-        forearmOffset =
-            absForearmEncoder.getDistance() + Encoders.Forearm.initial - Encoders.Forearm.offset;
-        turretOffset =
-            absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
-
-        setArmSetpoint(getArmMeasuredStates());
-
-        logAbsoluteEncoderValues.append(
-            new double[] {
-              absProximalEncoder.getDistance(),
-              absForearmEncoder.getDistance(),
-              absTurretEncoder.getDistance()
-            });
-        logEncoderOffsets.append(new double[] {proximalOffset, forearmOffset, turretOffset});
-      } else count++;
-    }
 
     // Calculate voltages
     var state = getArmMeasuredStates();

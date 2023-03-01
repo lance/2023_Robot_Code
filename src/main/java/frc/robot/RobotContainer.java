@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
@@ -63,9 +64,14 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return arm.simpleTrajectory(.12, .1, .65, .1)
+    return gripper
+        .intakeCommand(GamePiece.KUBE)
+        .alongWith(arm.simpleTrajectory(.12, .1, .65, .1))
         .andThen(arm.simpleTrajectory(.65, .1, .65, 1))
-        .andThen(new WaitCommand(0.5))
+        .andThen(arm.simpleTrajectory(.65, 1, .8, 1))
+        .andThen(gripper.ejectCommand())
+        .andThen(new WaitCommand(0.25))
+        .andThen(arm.simpleTrajectory(0.8, 1, .65, 1))
         .andThen(arm.simpleTrajectory(.65, 1, .65, .11))
         .andThen(arm.simpleTrajectory(.65, .1, .12, .1));
   }

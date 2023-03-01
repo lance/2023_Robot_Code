@@ -24,17 +24,17 @@ public final class Constants {
 
   public static final class kGripper {
     public static final boolean inverted = true;
-    public static final int proximityThreshold = 100;
+    public static final int proximityThreshold = 150;
     // TODO Tune these constants:
-    public static final int intakeVoltageCone = 4;
-    public static final int intakeVoltageKube = 3;
+    public static final int intakeVoltageCone = 5;
+    public static final int intakeVoltageKube = 4;
     public static final int ejectVel = -3;
-    public static final int holdingVoltageCone = 3;
-    public static final int holdingVoltageKube = 4;
+    public static final int holdingVoltageCone = 1;
+    public static final int holdingVoltageKube = 3;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
   }
-
+  // this comment is made by the stupidest of fellas
   public static final class kArm {
 
     public static final class Constraints {
@@ -50,6 +50,7 @@ public final class Constants {
 
     public static final class Encoders {
       public static final int PPR = 2048;
+      public static final long startUpTime = 800;
 
       public static final class Proximal {
         public static final double initial = Math.PI / 2 + Units.degreesToRadians(15);
@@ -115,9 +116,9 @@ public final class Constants {
     }
 
     public static final class Feedback {
-      public static final double proximal_kP = 7.5;
+      public static final double proximal_kP = 10;
       public static final double proximal_kD = 1;
-      public static final double forearm_kP = 9;
+      public static final double forearm_kP = 12;
       public static final double forearm_kD = 1;
     }
   }

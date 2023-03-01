@@ -73,7 +73,7 @@ public class Gripper extends SubsystemBase {
               }
             },
             () -> {
-              setVoltage(0);
+              setVoltage(kGripper.holdingVoltage);
               gameState = getGamePiece();
             })
         .until(() -> getGamePiece() != GamePiece.NONE);
