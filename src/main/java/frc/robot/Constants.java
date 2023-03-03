@@ -21,6 +21,13 @@ public final class Constants {
   public static final class OperatorInterface {
     public static final int primaryController = 0;
     public static final int secondaryController = 1;
+
+    public static final class Bindings {
+      public static final int groundIntake = 3;
+      public static final int L2 = 4;
+      public static final int L3 = 6;
+      public static final int L1 = 11;
+    }
   }
 
   public static final class kGripper {

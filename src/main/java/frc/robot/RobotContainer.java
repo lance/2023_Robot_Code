@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
+import frc.robot.Constants.OperatorInterface.Bindings;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
@@ -58,7 +59,7 @@ public class RobotContainer {
    */
   private void configureBindings() {
     armJoystick
-        .button(3)
+        .button(Bindings.groundIntake)
         .onTrue(
             arm.presetTrajectory("home_to_ground")
                 .andThen(
@@ -66,19 +67,19 @@ public class RobotContainer {
                         armJoystick.getHID().getRawButton(1) ? GamePiece.KUBE : GamePiece.CONE))
                 .andThen(arm.presetTrajectory("ground_to_home")));
     armJoystick
-        .button(4)
+        .button(Bindings.L2)
         .onTrue(
             arm.presetTrajectory("home_to_L2")
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("L2_to_home")));
     armJoystick
-        .button(6)
+        .button(Bindings.L3)
         .onTrue(
             arm.presetTrajectory("home_to_L3")
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("L3_to_home")));
     armJoystick
-        .button(11)
+        .button(Bindings.L1)
         .onTrue(
             arm.presetTrajectory("home_to_ground")
                 .andThen(gripper.ejectCommand())
