@@ -83,6 +83,7 @@ public class Arm extends SubsystemBase {
 
   private Matrix<N4, N1> armSetpoint;
   private Matrix<N4, N1> simState;
+  private double turretSetpoint;
 
   // Controls objects
   private final DoubleJointedArmController armController;
@@ -121,6 +122,7 @@ public class Arm extends SubsystemBase {
       new DoubleArrayLogEntry(log, "/ArmSubsystem/calculatedVoltages");
 
   public Arm() {
+    // Proximal motor config (magic numbers because these should never be touched)
     proximalNEO1.setIdleMode(IdleMode.kBrake);
     proximalNEO1.setInverted(true);
     proximalNEO1.setSmartCurrentLimit(40);
@@ -128,11 +130,15 @@ public class Arm extends SubsystemBase {
     proximalNEO2.follow(proximalNEO1, true);
     proximalNEO2.setSmartCurrentLimit(40);
 
+    // Forarm motor config
     forearmNEO.setIdleMode(IdleMode.kBrake);
     forearmNEO.setInverted(true);
     forearmNEO.setSmartCurrentLimit(40);
+
+    // Turret motor config
     turretController.setNeutralMode(NeutralMode.Brake);
 
+    // Encoder setup
     absProximalEncoder.setDistancePerRotation(-2 * Math.PI * Encoders.Proximal.gear_ratio);
     absForearmEncoder.setDistancePerRotation(2 * Math.PI);
     absTurretEncoder.setDistancePerRotation(2 * Math.PI * Encoders.Turret.gear_ratio);
@@ -147,18 +153,22 @@ public class Arm extends SubsystemBase {
     forearmEncoder.reset();
     turretEncoder.reset();
 
+    // Initial setpoints
     armSetpoint = getArmMeasuredStates();
     simState = armSetpoint;
+    turretSetpoint = 0;
 
+    // Create arm controller and trajectories
     armController =
         new DoubleJointedArmController(
             Feedback.proximal_kP, Feedback.proximal_kD, Feedback.forearm_kP, Feedback.forearm_kD);
     reset(armSetpoint);
+    trajectoryMap = new ArmDefaultTrajectories(this);
 
     telemetryInit();
-    trajectoryMap = new ArmDefaultTrajectories(this);
   }
 
+  // 2d kinematics: angles -> xy
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
     double xG =
         Proximal.length * Math.cos(matrixSE.get(0, 0))
@@ -169,6 +179,7 @@ public class Arm extends SubsystemBase {
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(xG, yG);
   }
 
+  // 3d kinematic: angles -> xyz
   public Matrix<N3, N1> kinematics3D(Matrix<N3, N1> matrixSETurret) {
     double xG =
         (Proximal.length * Math.cos(matrixSETurret.get(0, 0))
@@ -184,6 +195,7 @@ public class Arm extends SubsystemBase {
     return new MatBuilder<>(Nat.N3(), Nat.N1()).fill(xG, yG, zG);
   }
 
+  // inverse 2d kinematics: xy -> angles
   public Matrix<N2, N1> inverseKinematics(Matrix<N2, N1> matrixXY) {
     double r = Math.sqrt(Math.pow(matrixXY.get(0, 0), 2) + Math.pow(matrixXY.get(1, 0), 2));
     double theta_s =
@@ -199,6 +211,7 @@ public class Arm extends SubsystemBase {
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e - theta_s);
   }
 
+  // Generate joint-space trapozidal motion profiles
   public Pair<TrapezoidProfile, TrapezoidProfile> motionProfile(
       Matrix<N2, N1> startXY, Matrix<N2, N1> endXY) {
     // Inverse Kinematics to get the Thetas
@@ -287,10 +300,9 @@ public class Arm extends SubsystemBase {
     forearmNEO.setVoltage(voltages.get(1, 0));
   }
 
-  public void setTurretVoltages(double setpoint) {
-    turretController.setVoltage(
-        TurretFeedforward.calculate(setpoint)
-            + TurretPID.calculate(turretEncoder.getRate(), setpoint));
+  public double calculateTurretVoltage(double setpoint) {
+    return TurretFeedforward.calculate(setpoint)
+        + TurretPID.calculate(turretEncoder.getDistance() + turretOffset, setpoint);
   }
 
   private Matrix<N2, N1> getArmVoltages() {
@@ -364,8 +376,12 @@ public class Arm extends SubsystemBase {
 
     // Calculate voltages
     var state = getArmMeasuredStates();
-    var voltages = armController.calculate(state, armSetpoint);
-    // setArmVoltages(voltages);
+    var armVoltages = armController.calculate(state, armSetpoint);
+    var turretSRX = calculateTurretVoltage(turretSetpoint);
+
+    // Set voltages
+    setArmVoltages(armVoltages);
+    turretController.setVoltage(turretSRX);
 
     // Log values and update mechanism2d
     logSetpoint.append(
@@ -374,7 +390,7 @@ public class Arm extends SubsystemBase {
         });
     logState.append(
         new double[] {state.get(0, 0), state.get(1, 0), state.get(2, 0), state.get(3, 0)});
-    logCalculatedVoltages.append(new double[] {voltages.get(0, 0), voltages.get(1, 0)});
+    logCalculatedVoltages.append(new double[] {armVoltages.get(0, 0), armVoltages.get(1, 0)});
     logActualVoltages.append(
         new double[] {proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput()});
     proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
