@@ -34,15 +34,15 @@ public final class Constants {
     public static final boolean inverted = true;
     public static final int proximityThreshold = 150;
     // TODO Tune these constants:
-    public static final int intakeVoltageCone = 5;
-    public static final int intakeVoltageKube = 4;
-    public static final int ejectVel = -3;
-    public static final int holdingVoltageCone = 1;
-    public static final int holdingVoltageKube = 3;
+    public static final double intakeVoltageCone = 5;
+    public static final double intakeVoltageKube = 4;
+    public static final double ejectVoltage = -3;
+    public static final double holdingVoltageCone = 2;
+    public static final double holdingVoltageKube = 1;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
   }
-  // this comment is made by the stupidest of fellas
+
   public static final class kArm {
 
     public static final class Constraints {

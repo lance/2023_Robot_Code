@@ -4,7 +4,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
@@ -13,7 +12,7 @@ import frc.robot.utilities.PicoColorSensor;
 import frc.robot.utilities.PicoColorSensor.RawColor;
 
 public class Gripper extends SubsystemBase {
-  GamePiece gameState;
+  private GamePiece gripperState;
   // Initialize Motorcontroller objects
   private final CANSparkMax gripperNEO1 = new CANSparkMax(CanId.gripperNEO1, MotorType.kBrushless);
   private final CANSparkMax gripperNEO2 = new CANSparkMax(CanId.gripperNEO2, MotorType.kBrushless);
@@ -32,7 +31,7 @@ public class Gripper extends SubsystemBase {
     colorSensor = new PicoColorSensor();
     colorSensor.setDebugPrints(false);
 
-    this.setDefaultCommand(holdCommand(getGamePiece()));
+    this.setDefaultCommand(holdCommand());
   }
 
   // Sets the voltage of motors
@@ -74,30 +73,33 @@ public class Gripper extends SubsystemBase {
               }
             },
             () -> {
-              gameState = getGamePiece();
-              setVoltage(gameState==GamePiece.CONE?kGripper.holdingVoltageCone:kGripper.holdingVoltageKube);
+              gripperState = getGamePiece();
+              setVoltage(
+                  gripperState == GamePiece.CONE
+                      ? kGripper.holdingVoltageCone
+                      : kGripper.holdingVoltageKube);
             })
         .until(() -> getGamePiece() != GamePiece.NONE);
   }
 
   public Command ejectCommand() {
     return this.startEnd(
-            () -> setVoltage(kGripper.ejectVel),
+            () -> setVoltage(kGripper.ejectVoltage),
             () -> {
               setVoltage(0);
-              gameState = getGamePiece();
+              gripperState = GamePiece.NONE;
             })
         .until(() -> getGamePiece() == GamePiece.NONE);
   }
 
-  public Command holdCommand(GamePiece Piece) {
+  public Command holdCommand() {
     return this.startEnd(
         () -> {
-          if (Piece == GamePiece.CONE) {
+          if (gripperState == GamePiece.CONE) {
             setVoltage(kGripper.holdingVoltageCone);
-          } else if (Piece == GamePiece.KUBE) {
+          } else if (gripperState == GamePiece.KUBE) {
             setVoltage(kGripper.holdingVoltageKube);
-          }
+          } else setVoltage(0);
         },
         () -> {
           setVoltage(0);
