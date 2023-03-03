@@ -5,6 +5,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -63,25 +65,30 @@ public class RobotContainer {
         .onTrue(
             arm.presetTrajectory("home_to_ground")
                 .andThen(
-                    gripper.intakeCommand(
-                        armJoystick.getHID().getRawButton(1) ? GamePiece.KUBE : GamePiece.CONE))
+                    new ConditionalCommand(
+                        gripper.intakeCommand(GamePiece.KUBE),
+                        gripper.intakeCommand(GamePiece.CONE),
+                        () -> armJoystick.getThrottle() > 0.5))
                 .andThen(arm.presetTrajectory("ground_to_home")));
     armJoystick
         .button(Bindings.L2)
         .onTrue(
             arm.presetTrajectory("home_to_L2")
+                .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("L2_to_home")));
     armJoystick
         .button(Bindings.L3)
         .onTrue(
             arm.presetTrajectory("home_to_L3")
+                .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("L3_to_home")));
     armJoystick
         .button(Bindings.L1)
         .onTrue(
             arm.presetTrajectory("home_to_ground")
+                .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("ground_to_home")));
   }
