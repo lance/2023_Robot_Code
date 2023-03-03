@@ -2,6 +2,11 @@ package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.DoubleArrayLogEntry;
+import edu.wpi.first.util.datalog.DoubleLogEntry;
+import edu.wpi.first.util.datalog.StringLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -21,6 +26,12 @@ public class Gripper extends SubsystemBase {
       new MotorControllerGroup(gripperNEO1, gripperNEO2);
 
   private PicoColorSensor colorSensor;
+
+  private DataLog log = DataLogManager.getLog();
+  private StringLogEntry logGripperState = new StringLogEntry(log, "Gripper/gripperState");
+  private DoubleLogEntry logProximity = new DoubleLogEntry(log, "Gripper/proximity");
+  private DoubleArrayLogEntry logColorChannels =
+      new DoubleArrayLogEntry(log, "Gripper/colorChannels");
 
   public Gripper() {
     // Sets the motor controllers to inverted if needed
@@ -108,6 +119,10 @@ public class Gripper extends SubsystemBase {
 
   @Override
   public void periodic() {
+    var color = getRawColor();
+    logGripperState.append(String.valueOf(gripperState));
+    logProximity.append(getProximity());
+    logColorChannels.append(new double[] {color.red, color.green, color.blue});
     // This method will be called once per scheduler run
   }
 
