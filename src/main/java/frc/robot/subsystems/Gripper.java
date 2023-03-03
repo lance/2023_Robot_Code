@@ -4,6 +4,7 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
@@ -73,8 +74,8 @@ public class Gripper extends SubsystemBase {
               }
             },
             () -> {
-              setVoltage(kGripper.holdingVoltage);
               gameState = getGamePiece();
+              setVoltage(gameState==GamePiece.CONE?kGripper.holdingVoltageCone:kGripper.holdingVoltageKube);
             })
         .until(() -> getGamePiece() != GamePiece.NONE);
   }

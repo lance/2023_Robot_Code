@@ -20,6 +20,7 @@ import edu.wpi.first.math.util.Units;
 public final class Constants {
   public static final class OperatorInterface {
     public static final int primaryController = 0;
+    public static final int secondaryController = 1;
   }
 
   public static final class kGripper {
@@ -53,8 +54,8 @@ public final class Constants {
       public static final long startUpTime = 800;
 
       public static final class Proximal {
-        public static final double initial = Math.PI / 2 + Units.degreesToRadians(15);
-        public static final double offset = -2.563;
+        public static final double initial = Math.PI / 2 + Units.degreesToRadians(14);
+        public static final double offset = -2.58;
         public static final double gear_ratio = 50.0 / 18.0 * 12.0 / 44.0;
         public static final int absPort = 9;
         public static final int APort = 7;
@@ -62,8 +63,8 @@ public final class Constants {
       }
 
       public static final class Forearm {
-        public static final double initial = Units.degreesToRadians(-145);
-        public static final double offset = .6;
+        public static final double initial = Units.degreesToRadians(-174);
+        public static final double offset = .03;
         public static final double gear_ratio = 16.0 / 34.0;
         public static final int absPort = 12;
         public static final int APort = 10;
@@ -193,9 +194,10 @@ public final class Constants {
   }
 
   public static final class kVision {
-    // Cam mounted facing forward, half a meter behind center, half a meter up from center.
+    // Cam mounted facing forward, .243 meters ahead of center, .193 meters left of center, .229
+    // meters up from ground.
     public static final Transform3d aprilTagCameraPositionTransform =
-        new Transform3d(new Translation3d(-0.5, 0.0, 0.5), new Rotation3d(0, 0, 0));
+        new Transform3d(new Translation3d(0.243, 0.193, 0.229), new Rotation3d(0, 0, 0));
   }
 
   public static final class kIndications {

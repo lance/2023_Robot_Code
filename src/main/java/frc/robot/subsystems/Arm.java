@@ -43,6 +43,7 @@ import frc.robot.Constants.kArm.*;
 import frc.robot.Robot;
 import frc.robot.commands.ArmTrajectoryCommand;
 import frc.robot.controls.DoubleJointedArmController;
+import frc.robot.utilities.ArmDefaultTrajectories;
 import frc.robot.utilities.ArmTrajectory;
 import java.util.Map;
 
@@ -72,9 +73,9 @@ public class Arm extends SubsystemBase {
   private EncoderSim turretEncoderSim = new EncoderSim(turretEncoder);
 
   // Offsets and states
-  private double proximalOffset = -100;
-  private double forearmOffset = -100;
-  private double turretOffset = -100;
+  private double proximalOffset = Encoders.Proximal.initial;
+  private double forearmOffset = Encoders.Forearm.initial;
+  private double turretOffset = Encoders.Turret.initial;
 
   private final SimpleMotorFeedforward TurretFeedforward =
       new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
@@ -85,6 +86,7 @@ public class Arm extends SubsystemBase {
 
   // Controls objects
   private final DoubleJointedArmController armController;
+  private final ArmDefaultTrajectories trajectoryMap;
 
   // Mechanism 2d
   private Mechanism2d arm2d = new Mechanism2d(3, 2.2);
@@ -121,42 +123,29 @@ public class Arm extends SubsystemBase {
   public Arm() {
     proximalNEO1.setIdleMode(IdleMode.kBrake);
     proximalNEO1.setInverted(true);
+    proximalNEO1.setSmartCurrentLimit(40);
     proximalNEO2.setIdleMode(IdleMode.kBrake);
     proximalNEO2.follow(proximalNEO1, true);
+    proximalNEO2.setSmartCurrentLimit(40);
 
     forearmNEO.setIdleMode(IdleMode.kBrake);
     forearmNEO.setInverted(true);
+    forearmNEO.setSmartCurrentLimit(40);
     turretController.setNeutralMode(NeutralMode.Brake);
 
     absProximalEncoder.setDistancePerRotation(-2 * Math.PI * Encoders.Proximal.gear_ratio);
-    absForearmEncoder.setDistancePerRotation(2 * Math.PI * Encoders.Forearm.gear_ratio);
+    absForearmEncoder.setDistancePerRotation(2 * Math.PI);
     absTurretEncoder.setDistancePerRotation(2 * Math.PI * Encoders.Turret.gear_ratio);
 
     proximalEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Proximal.gear_ratio / Encoders.PPR);
-    forearmEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Forearm.gear_ratio / Encoders.PPR);
+    forearmEncoder.setDistancePerPulse(2 * Math.PI / Encoders.PPR);
     forearmEncoder.setReverseDirection(true);
     turretEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Turret.gear_ratio / Encoders.PPR);
     turretEncoder.setReverseDirection(true);
 
-    if (!Robot.isReal()) {
-      proximalOffset = Encoders.Proximal.initial;
-      forearmOffset = Encoders.Forearm.initial;
-      turretOffset = Encoders.Turret.initial;
-    }
-
     proximalEncoder.reset();
     forearmEncoder.reset();
     turretEncoder.reset();
-
-    new WaitUntilCommand(
-            () ->
-                absProximalEncoder.isConnected()
-                    && absForearmEncoder.isConnected()
-                    && absTurretEncoder.isConnected())
-        .withTimeout(5)
-        .andThen(new WaitCommand(1))
-        .andThen(this::encoderInit)
-        .schedule();
 
     armSetpoint = getArmMeasuredStates();
     simState = armSetpoint;
@@ -167,6 +156,7 @@ public class Arm extends SubsystemBase {
     reset(armSetpoint);
 
     telemetryInit();
+    trajectoryMap = new ArmDefaultTrajectories(this);
   }
 
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
@@ -230,7 +220,7 @@ public class Arm extends SubsystemBase {
     return new Pair<>(profileShoulder, profileElbow); // Return as pair
   }
 
-  private Matrix<N4, N1> getArmMeasuredStates() {
+  private Matrix<N4, N1> getArmEncoders() {
     return new MatBuilder<N4, N1>(Nat.N4(), Nat.N1())
         .fill(
             proximalEncoder.getDistance() + proximalOffset,
@@ -239,14 +229,43 @@ public class Arm extends SubsystemBase {
             forearmEncoder.getRate());
   }
 
-  private void encoderInit() {
-    proximalOffset =
-        absProximalEncoder.getDistance() + Encoders.Proximal.initial - Encoders.Proximal.offset;
-    forearmOffset =
-        absForearmEncoder.getDistance() + Encoders.Forearm.initial - Encoders.Forearm.offset;
-    turretOffset =
-        absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
+  private Matrix<N4, N1> getArmMeasuredStates() {
+    var encoders = getArmEncoders();
+    return new MatBuilder<N4, N1>(Nat.N4(), Nat.N1())
+        .fill(
+            encoders.get(0, 0),
+            -Encoders.Forearm.gear_ratio * encoders.get(0, 0)
+                + Encoders.Forearm.gear_ratio * encoders.get(1, 0),
+            encoders.get(2, 0),
+            -Encoders.Forearm.gear_ratio * encoders.get(2, 0)
+                + Encoders.Forearm.gear_ratio * encoders.get(3, 0));
+  }
 
+  public Command encoderStartCommand() {
+    return new WaitUntilCommand(
+            () ->
+                absProximalEncoder.isConnected()
+                    && absForearmEncoder.isConnected()
+                    && absTurretEncoder.isConnected())
+        .withTimeout(5)
+        .andThen(new WaitCommand(1))
+        .andThen(this::encoderInit)
+        .ignoringDisable(true);
+  }
+
+  private void encoderInit() {
+    if (Robot.isReal()) {
+      proximalOffset =
+          absProximalEncoder.getDistance() + Encoders.Proximal.initial - Encoders.Proximal.offset;
+      forearmOffset =
+          1
+                  / Encoders.Forearm.gear_ratio
+                  * (Encoders.Forearm.initial + Encoders.Forearm.gear_ratio * proximalOffset)
+              + absForearmEncoder.getDistance()
+              - Encoders.Forearm.offset;
+      turretOffset =
+          absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
+    }
     setArmSetpoint(getArmMeasuredStates());
 
     logAbsoluteEncoderValues.append(
@@ -309,10 +328,8 @@ public class Arm extends SubsystemBase {
     SBSensors.add("Forearm Absolute", absForearmEncoder).withPosition(1, 1);
     SBSensors.add("Turret Absolute", absTurretEncoder).withPosition(1, 2);
 
-    SBState.addDouble("Proximal", () -> proximalEncoder.getDistance() + proximalOffset)
-        .withPosition(0, 0);
-    SBState.addDouble("Forearm", () -> forearmEncoder.getDistance() + forearmOffset)
-        .withPosition(0, 1);
+    SBState.addDouble("Proximal", () -> getArmMeasuredStates().get(0, 0)).withPosition(0, 0);
+    SBState.addDouble("Forearm", () -> getArmMeasuredStates().get(1, 0)).withPosition(0, 1);
     SBState.addDouble("Turret", () -> turretEncoder.getDistance() + turretOffset)
         .withPosition(0, 2);
     SBState.addDouble("X", () -> kinematics2D(getArmMeasuredStates().block(2, 1, 0, 0)).get(0, 0))
@@ -337,6 +354,10 @@ public class Arm extends SubsystemBase {
     return new ArmTrajectoryCommand(new ArmTrajectory(profile), this);
   }
 
+  public Command presetTrajectory(String name) {
+    return new ArmTrajectoryCommand(trajectoryMap.getTrajectory(name), this);
+  }
+
   @Override
   public void periodic() {
     // Check for encoder init
@@ -344,7 +365,7 @@ public class Arm extends SubsystemBase {
     // Calculate voltages
     var state = getArmMeasuredStates();
     var voltages = armController.calculate(state, armSetpoint);
-    setArmVoltages(voltages);
+    // setArmVoltages(voltages);
 
     // Log values and update mechanism2d
     logSetpoint.append(
@@ -370,7 +391,7 @@ public class Arm extends SubsystemBase {
         NumericalIntegration.rkdp(
             armController::system_model, simState, getArmVoltages(), 20.0 / 1000.0);
     proximalEncoderSim.setDistance(simState.get(0, 0) - proximalOffset);
-    forearmEncoderSim.setDistance(simState.get(1, 0) - forearmOffset);
+    forearmEncoderSim.setDistance(simState.get(1, 0) - forearmOffset + simState.get(0, 0));
     proximalEncoderSim.setRate(simState.get(2, 0));
     forearmEncoderSim.setRate(simState.get(3, 0));
   }

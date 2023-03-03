@@ -5,7 +5,7 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GamePiece;
@@ -27,16 +27,16 @@ public class RobotContainer {
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final CommandXboxController driverController =
       new CommandXboxController(OperatorInterface.primaryController);
+  private final CommandJoystick armJoystick =
+      new CommandJoystick(OperatorInterface.secondaryController);
 
   private final Drivetrain drivetrain = new Drivetrain();
-
-  @SuppressWarnings("unused")
   private final Arm arm = new Arm();
-
   private final Gripper gripper = new Gripper();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
+    arm.encoderStartCommand().schedule();
     drivetrain.setDefaultCommand(
         new UserArcadeDrive(
             () -> -driverController.getLeftY(),
@@ -56,7 +56,34 @@ public class RobotContainer {
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
    * joysticks}.
    */
-  private void configureBindings() {}
+  private void configureBindings() {
+    armJoystick
+        .button(3)
+        .onTrue(
+            arm.presetTrajectory("home_to_ground")
+                .andThen(
+                    gripper.intakeCommand(
+                        armJoystick.getHID().getRawButton(1) ? GamePiece.KUBE : GamePiece.CONE))
+                .andThen(arm.presetTrajectory("ground_to_home")));
+    armJoystick
+        .button(4)
+        .onTrue(
+            arm.presetTrajectory("home_to_L2")
+                .andThen(gripper.ejectCommand())
+                .andThen(arm.presetTrajectory("L2_to_home")));
+    armJoystick
+        .button(6)
+        .onTrue(
+            arm.presetTrajectory("home_to_L3")
+                .andThen(gripper.ejectCommand())
+                .andThen(arm.presetTrajectory("L3_to_home")));
+    armJoystick
+        .button(11)
+        .onTrue(
+            arm.presetTrajectory("home_to_ground")
+                .andThen(gripper.ejectCommand())
+                .andThen(arm.presetTrajectory("ground_to_home")));
+  }
 
   /**
    * Use this to pass the autonomous command to the main {@link Robot} class.
@@ -64,15 +91,11 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return gripper
-        .intakeCommand(GamePiece.KUBE)
-        .alongWith(arm.simpleTrajectory(.12, .1, .65, .1))
-        .andThen(arm.simpleTrajectory(.65, .1, .65, 1))
-        .andThen(arm.simpleTrajectory(.65, 1, .8, 1))
-        .andThen(gripper.ejectCommand())
-        .andThen(new WaitCommand(0.25))
-        .andThen(arm.simpleTrajectory(0.8, 1, .65, 1))
-        .andThen(arm.simpleTrajectory(.65, 1, .65, .11))
-        .andThen(arm.simpleTrajectory(.65, .1, .12, .1));
+    // return arm.presetTrajectory("init_to_home");
+    return null;
+  }
+
+  public Command getTelopInitCommand() {
+    return arm.presetTrajectory("init_to_home");
   }
 }
