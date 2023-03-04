@@ -4,26 +4,17 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-<<<<<<< HEAD
-import edu.wpi.first.wpilibj2.command.StartEndCommand;
-import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
-=======
-import edu.wpi.first.wpilibj2.command.WaitCommand;
->>>>>>> 8e63519 (New control scheme with dynamicish trajectories)
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.Constants.OperatorInterface.Bindings;
-<<<<<<< HEAD
-import frc.robot.commands.TurretManual;
-=======
 import frc.robot.Constants.armState;
->>>>>>> 8e63519 (New control scheme with dynamicish trajectories)
+import frc.robot.commands.TurretManual;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
@@ -55,8 +46,8 @@ public class RobotContainer {
         new UserArcadeDrive(
             () -> -driverController.getLeftY(),
             () -> -driverController.getRightX(),
-            () -> driverController.getRightTriggerAxis() > 0.1,
             () -> driverController.getLeftTriggerAxis() > 0.1,
+            () -> driverController.getRightTriggerAxis() > 0.1,
             drivetrain));
     // Configure the trigger bindings
     configureBindings();
@@ -72,11 +63,29 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    armJoystick.button(Bindings.home).onTrue(arm.gotoState(armState.HOME));
-    armJoystick.button(Bindings.ground).onTrue(arm.gotoState(armState.GROUND));
-    armJoystick.button(Bindings.L2).onTrue(arm.gotoState(armState.L2));
-    armJoystick.button(Bindings.L3).onTrue(arm.gotoState(armState.L3));
-    armJoystick.button(Bindings.doublesub).onTrue(arm.gotoState(armState.DOUBLESUB));
+    armJoystick
+        .button(Bindings.home)
+        .onTrue(
+            arm.gotoState(armState.HOME)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    armJoystick
+        .button(Bindings.ground)
+        .onTrue(
+            arm.gotoState(armState.GROUND)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    armJoystick
+        .button(Bindings.L2)
+        .onTrue(
+            arm.gotoState(armState.L2).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    armJoystick
+        .button(Bindings.L3)
+        .onTrue(
+            arm.gotoState(armState.L3).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    armJoystick
+        .button(Bindings.doublesub)
+        .onTrue(
+            arm.gotoState(armState.DOUBLESUB)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
     armJoystick
         .button(Bindings.intake)
@@ -84,8 +93,10 @@ public class RobotContainer {
             new ConditionalCommand(
                 gripper.intakeCommand(GamePiece.CONE),
                 gripper.intakeCommand(GamePiece.KUBE),
-                () -> armJoystick.getThrottle() > 0.5));
+                () -> armJoystick.getThrottle() < 0.5));
     armJoystick.button(Bindings.place).onTrue(gripper.ejectCommand());
+
+    armJoystick.pov(0).whileTrue(new TurretManual(() -> -0.5 * armJoystick.getTwist(), arm));
   }
 
   /**
@@ -94,20 +105,19 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return gripper
-        .intakeCommand(GamePiece.KUBE)
-        .andThen(
-            new StartEndCommand(
-                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(-0.5, 0, 0)),
-                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
-                drivetrain))
-        .withTimeout(1.5)
-        .andThen(
-            new StartEndCommand(
-                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0.5, 0, 0)),
-                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
-                drivetrain))
-        .withTimeout(1.5);
+    return gripper.intakeCommand(GamePiece.KUBE);
+    /* .andThen(
+        new StartEndCommand(
+            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(-0.5, 0, 0)),
+            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
+            drivetrain))
+    .withTimeout(1.5)
+    .andThen(
+        new StartEndCommand(
+            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0.5, 0, 0)),
+            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
+            drivetrain))
+    .withTimeout(1.5);*/
   }
 
   public Command getTelopInitCommand() {

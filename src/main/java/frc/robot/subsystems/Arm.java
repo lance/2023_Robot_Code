@@ -226,13 +226,13 @@ public class Arm extends SubsystemBase {
     TrapezoidProfile profileShoulder =
         new TrapezoidProfile(
             new TrapezoidProfile.Constraints(
-                Constraints.Velocity, Constraints.Acceleration), // contraints
+                Constraints.proximalVelocity, Constraints.proximalAcceleration), // contraints
             new TrapezoidProfile.State(endThetas.get(0, 0), 0), // endpoint
             new TrapezoidProfile.State(initialThetas.get(0, 0), 0)); // startpoint
     TrapezoidProfile profileElbow =
         new TrapezoidProfile(
             new TrapezoidProfile.Constraints(
-                Constraints.Velocity, Constraints.Acceleration), // contraints
+                Constraints.forearmVelocity, Constraints.forearmAcceleration), // contraints
             new TrapezoidProfile.State(endThetas.get(1, 0), 0), // endpoint
             new TrapezoidProfile.State(initialThetas.get(1, 0), 0)); // startpoint
     return new Pair<>(profileShoulder, profileElbow); // Return as pair
@@ -413,8 +413,8 @@ public class Arm extends SubsystemBase {
               trajectoryMap.getTrajectory(new Pair<armState, armState>(trajState, targetState)));
     }
 
-    state = targetState;
     return new ArmTrajectoryCommand(trajectory, this)
+        .andThen(() -> state = targetState)
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
 

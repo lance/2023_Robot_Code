@@ -39,17 +39,18 @@ public final class Constants {
     public static final double intakeVoltageCone = 5;
     public static final double intakeVoltageKube = 3;
     public static final double ejectVoltage = -2;
-    public static final double holdingVoltageCone = 1;
+    public static final double holdingVoltageCone = 0.6;
     public static final double holdingVoltageKube = 1;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
   }
 
   public static final class kArm {
-
     public static final class Constraints {
-      public static final double Velocity = 1.25;
-      public static final double Acceleration = .5;
+      public static final double proximalVelocity = 1.4;
+      public static final double proximalAcceleration = .6;
+      public static final double forearmVelocity = 1.75;
+      public static final double forearmAcceleration = .85;
     }
 
     public static final class Motors {
@@ -120,15 +121,15 @@ public final class Constants {
       public static final double ks = 0;
       public static final double kv = 0;
       public static final double ka = 0;
-      public static final double kp = 7;
+      public static final double kp = 9;
       public static final double ki = 0;
       public static final double kd = 0;
     }
 
     public static final class Feedback {
-      public static final double proximal_kP = 10;
+      public static final double proximal_kP = 12;
       public static final double proximal_kD = 1;
-      public static final double forearm_kP = 19;
+      public static final double forearm_kP = 22;
       public static final double forearm_kD = 1;
     }
   }

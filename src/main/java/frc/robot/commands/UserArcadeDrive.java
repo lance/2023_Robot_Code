@@ -47,7 +47,7 @@ public class UserArcadeDrive extends CommandBase {
   // Turn off brakemode when command is scheduled
   @Override
   public void initialize() {
-    drivetrain.brakeMode(false);
+    drivetrain.brakeMode(true);
   }
 
   // Looping body of the command
@@ -73,7 +73,7 @@ public class UserArcadeDrive extends CommandBase {
       speed = Rate.precisionSpeed;
     } else if (boostInput.getAsBoolean()) {
       speed = Rate.maxSpeed;
-      rotation /= 2.0;
+      rotation /= 4.0;
     }
     double linearSpeed = xSpeed * speed;
     double angularSpeed = zRotation * rotation;

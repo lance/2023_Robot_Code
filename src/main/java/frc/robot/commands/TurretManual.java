@@ -3,7 +3,6 @@ package frc.robot.commands;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import frc.robot.subsystems.Arm;
-import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 
 /**
@@ -15,18 +14,16 @@ public class TurretManual extends CommandBase {
   private final Arm arm;
   private final SlewRateLimiter slewRateLimiter;
   private final DoubleSupplier angleInput;
-  private final BooleanSupplier enable;
 
   /**
    * Linear supplier and angular supplier are -1 to 1 double inputs that can be passed as method
    * references or lambda in the ctors Same but boolean for boost Drivetrain subsystem instance is
    * passed in
    */
-  public TurretManual(DoubleSupplier angleInput, BooleanSupplier enable, Arm arm) {
+  public TurretManual(DoubleSupplier angleInput, Arm arm) {
     this.arm = arm;
     slewRateLimiter = new SlewRateLimiter(0.5);
     this.angleInput = angleInput;
-    this.enable = enable;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(arm);
@@ -40,7 +37,6 @@ public class TurretManual extends CommandBase {
   // Looping body of the command
   @Override
   public void execute() {
-    if (!enable.getAsBoolean()) return;
     arm.setTurretSetpoint(slewRateLimiter.calculate(angleInput.getAsDouble()));
   }
 
