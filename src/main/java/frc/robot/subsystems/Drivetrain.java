@@ -11,19 +11,17 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.apriltag.AprilTagFieldLayout;
+import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.controller.DifferentialDriveAccelerationLimiter;
 import edu.wpi.first.math.controller.DifferentialDriveFeedforward;
 import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
 import edu.wpi.first.math.controller.LTVDifferentialDriveController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
@@ -34,8 +32,11 @@ import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.util.datalog.DataLog;
+import edu.wpi.first.util.datalog.DoubleArrayLogEntry;
+import edu.wpi.first.util.datalog.DoubleLogEntry;
+import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Encoder;
-import edu.wpi.first.wpilibj.Filesystem;
 import edu.wpi.first.wpilibj.SPI.Port;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
@@ -49,13 +50,12 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kDrivetrain.*;
 import frc.robot.Constants.kVision;
-import java.io.File;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
+import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
-import org.photonvision.RobotPoseEstimator;
-import org.photonvision.RobotPoseEstimator.PoseStrategy;
+import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.PhotonPoseEstimator.PoseStrategy;
 
 public class Drivetrain extends SubsystemBase {
   // Initalize motor controllers
@@ -113,14 +113,26 @@ public class Drivetrain extends SubsystemBase {
   // Create vision objects
   private PhotonCamera aprilTagCamera = new PhotonCamera("AprilTagCam");
   private AprilTagFieldLayout aprilTagFieldLayout;
-  private List<Pair<PhotonCamera, Transform3d>> camList =
-      new ArrayList<Pair<PhotonCamera, Transform3d>>();
-  private RobotPoseEstimator AprilTagPoseEstimator;
+  private PhotonPoseEstimator AprilTagPoseEstimator;
 
   // Shuffleboard
   private ShuffleboardTab SBTab = Shuffleboard.getTab("Drivetrain");
   private ShuffleboardLayout SBSensors;
   private Field2d robotField2d = new Field2d();
+
+  // Logging
+  private DataLog log = DataLogManager.getLog();
+  private DoubleArrayLogEntry logEncoderPosition =
+      new DoubleArrayLogEntry(log, "Drivetrain/encoderPosition");
+  private DoubleArrayLogEntry logEncoderVelocity =
+      new DoubleArrayLogEntry(log, "Drivetrain/encoderVelocity");
+  private DoubleArrayLogEntry logLastWheelSpeeds =
+      new DoubleArrayLogEntry(log, "Drivetrain/lastWheelSpeeds");
+  private DoubleArrayLogEntry logVoltages = new DoubleArrayLogEntry(log, "Drivetrain/voltages");
+  private DoubleArrayLogEntry logPoseEstimate =
+      new DoubleArrayLogEntry(log, "Driverain/poseEstimate");
+  private DoubleArrayLogEntry logPhotonPose = new DoubleArrayLogEntry(log, "Driverain/photonPose");
+  private DoubleLogEntry logGyro = new DoubleLogEntry(log, "Drivetrain/gyro");
 
   // Constructor taking no arguments, all relevant values are defined in Constants.java
   public Drivetrain() {
@@ -134,19 +146,19 @@ public class Drivetrain extends SubsystemBase {
         Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
     rightEncoder.setReverseDirection(true);
 
-    // TODO clean up this garbage
     try {
       aprilTagFieldLayout =
-          new AprilTagFieldLayout(
-              new File(Filesystem.getDeployDirectory(), "HallLayout.json").toPath());
+          AprilTagFieldLayout.loadFromResource(AprilTagFields.k2023ChargedUp.m_resourceFile);
     } catch (Exception e) {
-      System.out.println("Failed to load AprilTag Layout");
+      System.out.println("Failed to load field layout");
     }
-    camList.add(
-        new Pair<PhotonCamera, Transform3d>(
-            aprilTagCamera, kVision.aprilTagCameraPositionTransform));
+
     AprilTagPoseEstimator =
-        new RobotPoseEstimator(aprilTagFieldLayout, PoseStrategy.LOWEST_AMBIGUITY, camList);
+        new PhotonPoseEstimator(
+            aprilTagFieldLayout,
+            PoseStrategy.MULTI_TAG_PNP,
+            aprilTagCamera,
+            kVision.aprilTagCameraPositionTransform);
 
     DDPoseEstimator =
         new DifferentialDrivePoseEstimator(
@@ -225,6 +237,7 @@ public class Drivetrain extends SubsystemBase {
   public void driveVoltages(DifferentialDriveWheelVoltages voltages) {
     leftMotorGroup.setVoltage(voltages.left);
     rightMotorGroup.setVoltage(voltages.right);
+    logVoltages.append(new double[] {voltages.left, voltages.right});
   }
 
   // Same as driveVoltages but acceleration is limited according to the drivetrain model
@@ -316,11 +329,26 @@ public class Drivetrain extends SubsystemBase {
 
     // Get vision measurement and pass it to pose estimator
     AprilTagPoseEstimator.setReferencePose(DDPoseEstimator.getEstimatedPosition());
-    Optional<Pair<Pose3d, Double>> result = AprilTagPoseEstimator.update();
+    Optional<EstimatedRobotPose> result = AprilTagPoseEstimator.update();
     if (result.isPresent()) {
       DDPoseEstimator.addVisionMeasurement(
-          result.get().getFirst().toPose2d(), Timer.getFPGATimestamp() - result.get().getSecond());
+          result.get().estimatedPose.toPose2d(), result.get().timestampSeconds);
     }
+
+    // Log shit
+    logEncoderPosition.append(new double[] {getLeftDistance(), getRightDistance()});
+    logEncoderVelocity.append(new double[] {getLeftVelocity(), getRightVelocity()});
+    logGyro.append(getAngle());
+    var estimatedPose = DDPoseEstimator.getEstimatedPosition();
+    logPoseEstimate.append(
+        new double[] {
+          estimatedPose.getX(), estimatedPose.getY(), estimatedPose.getRotation().getRadians()
+        });
+    var photonPose = result.get().estimatedPose.toPose2d();
+    logPhotonPose.append(
+        new double[] {photonPose.getX(), photonPose.getY(), photonPose.getRotation().getRadians()});
+    logLastWheelSpeeds.append(
+        new double[] {lastSpeeds.leftMetersPerSecond, lastSpeeds.rightMetersPerSecond});
   }
 
   @Override
