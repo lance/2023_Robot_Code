@@ -33,11 +33,10 @@ public final class Constants {
   public static final class kGripper {
     public static final boolean inverted = true;
     public static final int proximityThreshold = 150;
-    // TODO Tune these constants:
     public static final double intakeVoltageCone = 5;
-    public static final double intakeVoltageKube = 4;
-    public static final double ejectVoltage = -3;
-    public static final double holdingVoltageCone = 2;
+    public static final double intakeVoltageKube = 3;
+    public static final double ejectVoltage = -6;
+    public static final double holdingVoltageCone = 1;
     public static final double holdingVoltageKube = 1;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
@@ -61,8 +60,8 @@ public final class Constants {
       public static final long startUpTime = 800;
 
       public static final class Proximal {
-        public static final double initial = Math.PI / 2 + Units.degreesToRadians(14);
-        public static final double offset = -2.58;
+        public static final double initial = Math.PI / 2 + Units.degreesToRadians(16);
+        public static final double offset = -1.515485;
         public static final double gear_ratio = 50.0 / 18.0 * 12.0 / 44.0;
         public static final int absPort = 9;
         public static final int APort = 7;
@@ -70,8 +69,8 @@ public final class Constants {
       }
 
       public static final class Forearm {
-        public static final double initial = Units.degreesToRadians(-174);
-        public static final double offset = .03;
+        public static final double initial = Units.degreesToRadians(-172);
+        public static final double offset = 3.254898;
         public static final double gear_ratio = 16.0 / 34.0;
         public static final int absPort = 12;
         public static final int APort = 10;
