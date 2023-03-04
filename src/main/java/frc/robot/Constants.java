@@ -118,7 +118,7 @@ public final class Constants {
       public static final double ks = 0;
       public static final double kv = 0;
       public static final double ka = 0;
-      public static final double kp = 5;
+      public static final double kp = 7;
       public static final double ki = 0;
       public static final double kd = 0;
     }
@@ -126,7 +126,7 @@ public final class Constants {
     public static final class Feedback {
       public static final double proximal_kP = 10;
       public static final double proximal_kD = 1;
-      public static final double forearm_kP = 12;
+      public static final double forearm_kP = 19;
       public static final double forearm_kD = 1;
     }
   }

@@ -24,12 +24,12 @@ public class ArmDefaultTrajectories {
 
     trajectories.put(
         "home_to_L3",
-        new ArmTrajectory(simpleProfile(.14, .12, .57, .79))
-            .concatenate(new ArmTrajectory(simpleProfile(.57, .79, 1.33, 1.13))));
+        new ArmTrajectory(simpleProfile(.14, .12, .64, .9))
+            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, 1.25, 1.13))));
     trajectories.put(
         "L3_to_home",
-        new ArmTrajectory(simpleProfile(1.33, 1.13, .57, .79))
-            .concatenate(new ArmTrajectory(simpleProfile(.57, .79, .14, .12))));
+        new ArmTrajectory(simpleProfile(1.25, 1.13, .64, .9))
+            .concatenate(new ArmTrajectory(simpleProfile(.64, .9, .14, .12))));
 
     trajectories.put("home_to_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .82)));
     trajectories.put("L2_to_home", new ArmTrajectory(simpleProfile(.9, .82, .14, .12)));

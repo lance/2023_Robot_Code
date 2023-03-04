@@ -113,9 +113,9 @@ public class RobotContainer {
    */
   public Command getAutoCommand() {
     return arm.presetTrajectory("init_to_home")
-        .andThen(arm.presetTrajectory("home_to_doublesub"))
+        .andThen(arm.presetTrajectory("home_to_L3"))
         .andThen(new WaitCommand(.25))
-        .andThen(arm.presetTrajectory("doublesub_to_home"));
+        .andThen(arm.presetTrajectory("L3_to_home"));
   }
 
   public Command getTelopInitCommand() {
