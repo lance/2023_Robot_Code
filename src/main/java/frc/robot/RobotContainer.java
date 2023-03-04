@@ -4,9 +4,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
+import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -71,6 +72,7 @@ public class RobotContainer {
                         gripper.intakeCommand(GamePiece.KUBE),
                         gripper.intakeCommand(GamePiece.CONE),
                         () -> armJoystick.getThrottle() > 0.5))
+                .until(armJoystick.getHID()::getTrigger)
                 .andThen(arm.presetTrajectory("ground_to_home")));
     armJoystick
         .button(Bindings.L2)
@@ -103,6 +105,7 @@ public class RobotContainer {
                         gripper.intakeCommand(GamePiece.KUBE),
                         gripper.intakeCommand(GamePiece.CONE),
                         () -> armJoystick.getThrottle() > 0.5))
+                .until(armJoystick.getHID()::getTrigger)
                 .andThen(arm.presetTrajectory("doublesub_to_home")));
   }
 
@@ -112,10 +115,20 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return arm.presetTrajectory("init_to_home")
-        .andThen(arm.presetTrajectory("home_to_L3"))
-        .andThen(new WaitCommand(.25))
-        .andThen(arm.presetTrajectory("L3_to_home"));
+    return gripper
+        .intakeCommand(GamePiece.KUBE)
+        .andThen(
+            new StartEndCommand(
+                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(1, 0, 0)),
+                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
+                drivetrain))
+        .withTimeout(1.5)
+        .andThen(
+            new StartEndCommand(
+                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(-1, 0, 0)),
+                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
+                drivetrain))
+        .withTimeout(1.5);
   }
 
   public Command getTelopInitCommand() {

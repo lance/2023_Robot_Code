@@ -36,7 +36,7 @@ public final class Constants {
     public static final int proximityThreshold = 150;
     public static final double intakeVoltageCone = 5;
     public static final double intakeVoltageKube = 3;
-    public static final double ejectVoltage = -6;
+    public static final double ejectVoltage = -2;
     public static final double holdingVoltageCone = 1;
     public static final double holdingVoltageKube = 1;
     public static final int stallCurrentLimit = 5;
