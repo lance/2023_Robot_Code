@@ -23,11 +23,13 @@ public final class Constants {
     public static final int secondaryController = 1;
 
     public static final class Bindings {
-      public static final int groundIntake = 3;
-      public static final int doublesubIntake = 5;
+      public static final int ground = 3;
+      public static final int doublesub = 5;
       public static final int L2 = 4;
       public static final int L3 = 6;
-      public static final int L1 = 11;
+      public static final int home = 11;
+      public static final int place = 1;
+      public static final int intake = 2;
     }
   }
 
@@ -217,5 +219,15 @@ public final class Constants {
     CONE,
     KUBE,
     NONE
+  }
+
+  public enum armState {
+    INIT,
+    HOME,
+    NEUTRAL,
+    GROUND,
+    DOUBLESUB,
+    L2,
+    L3
   }
 }

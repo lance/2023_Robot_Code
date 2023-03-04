@@ -7,15 +7,23 @@ package frc.robot;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+<<<<<<< HEAD
 import edu.wpi.first.wpilibj2.command.StartEndCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
+=======
+import edu.wpi.first.wpilibj2.command.WaitCommand;
+>>>>>>> 8e63519 (New control scheme with dynamicish trajectories)
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.Constants.OperatorInterface.Bindings;
+<<<<<<< HEAD
 import frc.robot.commands.TurretManual;
+=======
+import frc.robot.Constants.armState;
+>>>>>>> 8e63519 (New control scheme with dynamicish trajectories)
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
@@ -64,52 +72,20 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    armJoystick
-        .button(Bindings.groundIntake)
-        .onTrue(
-            arm.presetTrajectory("home_to_ground")
-                .andThen(
-                    new ConditionalCommand(
-                        gripper.intakeCommand(GamePiece.KUBE),
-                        gripper.intakeCommand(GamePiece.CONE),
-                        () -> armJoystick.getThrottle() > 0.5))
-                .until(armJoystick.getHID()::getTrigger)
-                .andThen(arm.presetTrajectory("ground_to_home")));
-    armJoystick
-        .button(Bindings.L2)
-        .onTrue(
-            arm.presetTrajectory("home_to_L2")
-                .andThen(
-                    new WaitUntilCommand(armJoystick.getHID()::getTrigger)
-                        .raceWith(new TurretManual(armJoystick::getTwist, this::turretEnable, arm)))
-                .andThen(gripper.ejectCommand())
-                .andThen(arm.presetTrajectory("L2_to_home")));
-    armJoystick
-        .button(Bindings.L3)
-        .onTrue(
-            arm.presetTrajectory("home_to_L3")
-                .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
-                .andThen(gripper.ejectCommand())
-                .andThen(arm.presetTrajectory("L3_to_home")));
-    armJoystick
-        .button(Bindings.L1)
-        .onTrue(
-            arm.presetTrajectory("home_to_ground")
-                .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
-                .andThen(gripper.ejectCommand())
-                .andThen(arm.presetTrajectory("ground_to_home")));
+    armJoystick.button(Bindings.home).onTrue(arm.gotoState(armState.HOME));
+    armJoystick.button(Bindings.ground).onTrue(arm.gotoState(armState.GROUND));
+    armJoystick.button(Bindings.L2).onTrue(arm.gotoState(armState.L2));
+    armJoystick.button(Bindings.L3).onTrue(arm.gotoState(armState.L3));
+    armJoystick.button(Bindings.doublesub).onTrue(arm.gotoState(armState.DOUBLESUB));
 
     armJoystick
-        .button(Bindings.doublesubIntake)
-        .onTrue(
-            arm.presetTrajectory("home_to_doublesub")
-                .andThen(
-                    new ConditionalCommand(
-                        gripper.intakeCommand(GamePiece.KUBE),
-                        gripper.intakeCommand(GamePiece.CONE),
-                        () -> armJoystick.getThrottle() > 0.5))
-                .until(armJoystick.getHID()::getTrigger)
-                .andThen(arm.presetTrajectory("doublesub_to_home")));
+        .button(Bindings.intake)
+        .toggleOnTrue(
+            new ConditionalCommand(
+                gripper.intakeCommand(GamePiece.CONE),
+                gripper.intakeCommand(GamePiece.KUBE),
+                () -> armJoystick.getThrottle() > 0.5));
+    armJoystick.button(Bindings.place).onTrue(gripper.ejectCommand());
   }
 
   /**
@@ -135,7 +111,7 @@ public class RobotContainer {
   }
 
   public Command getTelopInitCommand() {
-    return arm.presetTrajectory("init_to_home");
+    return arm.gotoState(armState.HOME);
   }
 
   private Boolean turretEnable() {

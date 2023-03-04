@@ -6,36 +6,54 @@ import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import frc.robot.Constants.armState;
 import frc.robot.subsystems.Arm;
 import java.util.HashMap;
 
 public class ArmDefaultTrajectories {
-  private HashMap<String, ArmTrajectory> trajectories = new HashMap<>();
+  public HashMap<String, ArmTrajectory> trajectories = new HashMap<>();
   private Arm arm;
 
   public ArmDefaultTrajectories(Arm arm) {
     this.arm = arm;
 
-    trajectories.put("init_to_home", new ArmTrajectory(simpleProfile(.07, 0.08, 0.14, 0.12)));
-    trajectories.put("home_to_init", new ArmTrajectory(simpleProfile(.14, 0.12, 0.07, 0.08)));
+    trajectories.put("INIT_HOME", new ArmTrajectory(simpleProfile(.07, 0.08, 0.14, 0.12)));
+    trajectories.put("HOME_INIT", new ArmTrajectory(simpleProfile(.14, 0.12, 0.07, 0.08)));
 
-    trajectories.put("home_to_ground", new ArmTrajectory(simpleProfile(.14, .12, .65, -.08)));
-    trajectories.put("ground_to_home", new ArmTrajectory(simpleProfile(.65, -.08, .14, .12)));
+    trajectories.put("HOME_GROUND", new ArmTrajectory(simpleProfile(.14, .12, .65, -.08)));
+    trajectories.put("GROUND_HOME", new ArmTrajectory(simpleProfile(.65, -.08, .14, .12)));
 
     trajectories.put(
-        "home_to_L3",
-        new ArmTrajectory(simpleProfile(.14, .12, .64, .9))
-            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, 1.15, 1.13))));
+        "HOME_L3",
+        new ArmTrajectory(simpleProfile(.14, .12, .65, .9))
+            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, 1.25, 1.13))));
     trajectories.put(
-        "L3_to_home",
-        new ArmTrajectory(simpleProfile(1.15, 1.13, .64, .9))
-            .concatenate(new ArmTrajectory(simpleProfile(.64, .9, .14, .12))));
+        "L3_HOME",
+        new ArmTrajectory(simpleProfile(1.25, 1.13, .65, .9))
+            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, .14, .12))));
 
-    trajectories.put("home_to_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .82)));
-    trajectories.put("L2_to_home", new ArmTrajectory(simpleProfile(.9, .82, .14, .12)));
+    trajectories.put("HOME_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .82)));
+    trajectories.put("L2_HOME", new ArmTrajectory(simpleProfile(.9, .82, .14, .12)));
 
-    trajectories.put("home_to_doublesub", new ArmTrajectory(simpleProfile(.14, 0.12, 0.65, 0.87)));
-    trajectories.put("doublesub_to_home", new ArmTrajectory(simpleProfile(.65, 0.87, 0.14, 0.12)));
+    trajectories.put("HOME_DOUBLESUB", new ArmTrajectory(simpleProfile(.14, 0.12, 0.65, 0.87)));
+    trajectories.put("DOUBLESUB_HOME", new ArmTrajectory(simpleProfile(.65, 0.87, 0.14, 0.12)));
+
+    // Neutral trajectories
+
+    trajectories.put("HOME_NEUTRAL", new ArmTrajectory(simpleProfile(.14, .12, .49, .49)));
+    trajectories.put("NEUTRAL_HOME", new ArmTrajectory(simpleProfile(.49, 0.49, 0.14, 0.12)));
+
+    trajectories.put("NEUTRAL_L3", new ArmTrajectory(simpleProfile(.49, .49, 1.25, 1.13)));
+    trajectories.put("L3_NEUTRAL", new ArmTrajectory(simpleProfile(1.24, 1.13, .49, .49)));
+
+    trajectories.put("NEUTRAL_L2", new ArmTrajectory(simpleProfile(.49, .49, .9, .82)));
+    trajectories.put("L2_NEUTRAL", new ArmTrajectory(simpleProfile(.9, .82, .49, .49)));
+
+    trajectories.put("NEUTRAL_GROUND", new ArmTrajectory(simpleProfile(.49, .49, .65, -.08)));
+    trajectories.put("GROUND_NEUTRAL", new ArmTrajectory(simpleProfile(.65, -.08, .49, .49)));
+
+    trajectories.put("NEUTRAL_DOUBLESUB", new ArmTrajectory(simpleProfile(.49, .49, .65, 0.9)));
+    trajectories.put("DOUBLESUB_NEUTRAL", new ArmTrajectory(simpleProfile(.65, .9, .49, .49)));
   }
 
   public Pair<TrapezoidProfile, TrapezoidProfile> simpleProfile(
@@ -45,7 +63,7 @@ public class ArmDefaultTrajectories {
         new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(endx, endy));
   }
 
-  public ArmTrajectory getTrajectory(String name) {
-    return trajectories.get(name);
+  public ArmTrajectory getTrajectory(Pair<armState, armState> trajPair) {
+    return trajectories.get((trajPair.getFirst().name()) + "_" + trajPair.getSecond().name());
   }
 }

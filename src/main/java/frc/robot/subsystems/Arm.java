@@ -34,10 +34,13 @@ import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import frc.robot.Constants.CanId;
+import frc.robot.Constants.armState;
 import frc.robot.Constants.kArm.*;
 import frc.robot.Robot;
 import frc.robot.commands.ArmTrajectoryCommand;
@@ -85,6 +88,7 @@ public class Arm extends SubsystemBase {
   private Matrix<N4, N1> armSetpoint;
   private Matrix<N4, N1> simState;
   private double turretSetpoint;
+  private armState state = armState.INIT;
 
   // Controls objects
   private final DoubleJointedArmController armController;
@@ -373,11 +377,50 @@ public class Arm extends SubsystemBase {
         motionProfile(
             new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(startx, starty),
             new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(endx, endy));
-    return new ArmTrajectoryCommand(new ArmTrajectory(profile), this);
+    return new ArmTrajectoryCommand(new ArmTrajectory(profile), this)
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
 
-  public Command presetTrajectory(String name) {
-    return new ArmTrajectoryCommand(trajectoryMap.getTrajectory(name), this);
+  public Command presetTrajectory(Pair<armState, armState> trajPair) {
+    return new ArmTrajectoryCommand(trajectoryMap.getTrajectory(trajPair), this)
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+  }
+
+  private Command gotoStateGenerate(armState targetState) {
+    if (targetState == state) return new WaitCommand(0);
+    ArmTrajectory trajectory = new ArmTrajectory();
+    armState trajState = state;
+    if (state == armState.INIT && targetState != armState.HOME) {
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(
+                  new Pair<armState, armState>(armState.INIT, armState.HOME)));
+      trajState = armState.HOME;
+    }
+
+    if (state != armState.HOME && targetState != armState.HOME) {
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(
+                  new Pair<armState, armState>(trajState, armState.NEUTRAL)));
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(
+                  new Pair<armState, armState>(armState.NEUTRAL, targetState)));
+    } else {
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(new Pair<armState, armState>(trajState, targetState)));
+    }
+
+    state = targetState;
+    return new ArmTrajectoryCommand(trajectory, this)
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+  }
+
+  public Command gotoState(armState targetState) {
+    return new ProxyCommand(() -> gotoStateGenerate(targetState))
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
 
   @Override
