@@ -104,16 +104,13 @@ public class Gripper extends SubsystemBase {
   }
 
   public Command holdCommand() {
-    return this.startEnd(
+    return this.runOnce(
         () -> {
           if (gripperState == GamePiece.CONE) {
             setVoltage(kGripper.holdingVoltageCone);
           } else if (gripperState == GamePiece.KUBE) {
             setVoltage(kGripper.holdingVoltageKube);
           } else setVoltage(0);
-        },
-        () -> {
-          setVoltage(0);
         });
   }
 
