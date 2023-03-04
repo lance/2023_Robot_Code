@@ -99,8 +99,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    // return arm.presetTrajectory("init_to_home");
-    return null;
+    return arm.presetTrajectory("init_to_home");
   }
 
   public Command getTelopInitCommand() {

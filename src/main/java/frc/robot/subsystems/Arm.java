@@ -32,7 +32,6 @@ import edu.wpi.first.wpilibj.simulation.EncoderSim;
 import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.MechanismRoot2d;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -74,7 +73,9 @@ public class Arm extends SubsystemBase {
 
   // Offsets and states
   private double proximalOffset = Encoders.Proximal.initial;
-  private double forearmOffset = Encoders.Forearm.initial;
+  private double forearmOffset =
+      (Encoders.Forearm.initial + Encoders.Forearm.gear_ratio * Encoders.Proximal.initial)
+          / Encoders.Forearm.gear_ratio;
   private double turretOffset = Encoders.Turret.initial;
 
   private final SimpleMotorFeedforward TurretFeedforward =
@@ -280,6 +281,7 @@ public class Arm extends SubsystemBase {
           absTurretEncoder.getDistance() + Encoders.Turret.initial - Encoders.Turret.offset;
     }
     setArmSetpoint(getArmMeasuredStates());
+    simState = getArmMeasuredStates();
 
     logAbsoluteEncoderValues.append(
         new double[] {
@@ -311,7 +313,7 @@ public class Arm extends SubsystemBase {
   }
 
   public void telemetryInit() {
-    SmartDashboard.putData("Arm", arm2d);
+    SBTab.add("Arm", arm2d);
     SBMotors = SBTab.getLayout("Motors", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0);
     SBSensors =
         SBTab.getLayout("Sensors", BuiltInLayouts.kGrid)
@@ -407,7 +409,10 @@ public class Arm extends SubsystemBase {
         NumericalIntegration.rkdp(
             armController::system_model, simState, getArmVoltages(), 20.0 / 1000.0);
     proximalEncoderSim.setDistance(simState.get(0, 0) - proximalOffset);
-    forearmEncoderSim.setDistance(simState.get(1, 0) - forearmOffset + simState.get(0, 0));
+    forearmEncoderSim.setDistance(
+        ((simState.get(1, 0) + Encoders.Forearm.gear_ratio * simState.get(0, 0))
+                * (1.0 / Encoders.Forearm.gear_ratio))
+            - forearmOffset);
     proximalEncoderSim.setRate(simState.get(2, 0));
     forearmEncoderSim.setRate(simState.get(3, 0));
   }
