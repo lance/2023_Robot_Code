@@ -15,6 +15,7 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.Constants.OperatorInterface.Bindings;
+import frc.robot.commands.TurretManual;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Drivetrain;
@@ -78,7 +79,9 @@ public class RobotContainer {
         .button(Bindings.L2)
         .onTrue(
             arm.presetTrajectory("home_to_L2")
-                .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
+                .andThen(
+                    new WaitUntilCommand(armJoystick.getHID()::getTrigger)
+                        .raceWith(new TurretManual(armJoystick::getTwist, this::turretEnable, arm)))
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("L2_to_home")));
     armJoystick
@@ -119,13 +122,13 @@ public class RobotContainer {
         .intakeCommand(GamePiece.KUBE)
         .andThen(
             new StartEndCommand(
-                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(1, 0, 0)),
+                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(-0.5, 0, 0)),
                 () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
                 drivetrain))
         .withTimeout(1.5)
         .andThen(
             new StartEndCommand(
-                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(-1, 0, 0)),
+                () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0.5, 0, 0)),
                 () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
                 drivetrain))
         .withTimeout(1.5);
@@ -133,5 +136,9 @@ public class RobotContainer {
 
   public Command getTelopInitCommand() {
     return arm.presetTrajectory("init_to_home");
+  }
+
+  private Boolean turretEnable() {
+    return armJoystick.getHID().getPOV() == 0;
   }
 }

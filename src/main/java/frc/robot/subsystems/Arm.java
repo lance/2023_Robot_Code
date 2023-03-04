@@ -356,6 +356,14 @@ public class Arm extends SubsystemBase {
     armSetpoint = setpoint;
   }
 
+  public void setTurretSetpoint(double setpoint) {
+    turretSetpoint = setpoint;
+  }
+
+  public double getTurretSetpoint() {
+    return turretSetpoint;
+  }
+
   public void reset(Matrix<N4, N1> state) {
     armController.reset(state);
   }
