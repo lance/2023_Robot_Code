@@ -1,6 +1,6 @@
 [![CI](https://github.com/Team8727/2023_Robot_Code/actions/workflows/main.yml/badge.svg)](https://github.com/Team8727/2023_Robot_Code/actions/workflows/main.yml)
 # 2023_Robot_Code
-\<name here> is Glitch 2.0's [2023](https://www.firstinspires.org/robotics/frc/game-and-season) FRC Robot
+Megastuf is Glitch 2.0's [2023](https://www.firstinspires.org/robotics/frc/game-and-season) FRC Robot
 ![Alt text](/Media/Robot.png?raw=true)
 
 ## Software
