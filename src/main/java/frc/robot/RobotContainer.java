@@ -6,6 +6,7 @@ package frc.robot;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -44,7 +45,8 @@ public class RobotContainer {
         new UserArcadeDrive(
             () -> -driverController.getLeftY(),
             () -> -driverController.getRightX(),
-            () -> driverController.getRightTriggerAxis() > .1,
+            () -> driverController.getRightTriggerAxis() > 0.1,
+            () -> driverController.getLeftTriggerAxis() > 0.1,
             drivetrain));
     // Configure the trigger bindings
     configureBindings();
@@ -91,6 +93,17 @@ public class RobotContainer {
                 .andThen(new WaitUntilCommand(armJoystick.getHID()::getTrigger))
                 .andThen(gripper.ejectCommand())
                 .andThen(arm.presetTrajectory("ground_to_home")));
+
+    armJoystick
+        .button(Bindings.doublesubIntake)
+        .onTrue(
+            arm.presetTrajectory("home_to_doublesub")
+                .andThen(
+                    new ConditionalCommand(
+                        gripper.intakeCommand(GamePiece.KUBE),
+                        gripper.intakeCommand(GamePiece.CONE),
+                        () -> armJoystick.getThrottle() > 0.5))
+                .andThen(arm.presetTrajectory("doublesub_to_home")));
   }
 
   /**
@@ -99,7 +112,10 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return arm.presetTrajectory("init_to_home");
+    return arm.presetTrajectory("init_to_home")
+        .andThen(arm.presetTrajectory("home_to_doublesub"))
+        .andThen(new WaitCommand(.25))
+        .andThen(arm.presetTrajectory("doublesub_to_home"));
   }
 
   public Command getTelopInitCommand() {

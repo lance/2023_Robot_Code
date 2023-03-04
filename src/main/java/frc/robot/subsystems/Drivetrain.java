@@ -344,7 +344,7 @@ public class Drivetrain extends SubsystemBase {
         new double[] {
           estimatedPose.getX(), estimatedPose.getY(), estimatedPose.getRotation().getRadians()
         });
-    var photonPose = result.get().estimatedPose.toPose2d();
+    var photonPose = result.isPresent() ? result.get().estimatedPose.toPose2d() : new Pose2d();
     logPhotonPose.append(
         new double[] {photonPose.getX(), photonPose.getY(), photonPose.getRotation().getRadians()});
     logLastWheelSpeeds.append(

@@ -20,6 +20,7 @@ public class UserArcadeDrive extends CommandBase {
   private final DoubleSupplier linearInput;
   private final DoubleSupplier angularInput;
   private final BooleanSupplier boostInput;
+  private final BooleanSupplier precisionInput;
 
   /**
    * Linear supplier and angular supplier are -1 to 1 double inputs that can be passed as method
@@ -30,12 +31,14 @@ public class UserArcadeDrive extends CommandBase {
       DoubleSupplier linearSupplier,
       DoubleSupplier angularSupplier,
       BooleanSupplier boostSupplier,
+      BooleanSupplier precisionSupplier,
       Drivetrain drivetrain) {
     this.drivetrain = drivetrain;
     slewRateLimiter = new SlewRateLimiter(Rate.driverAccel);
     linearInput = linearSupplier;
     angularInput = angularSupplier;
     boostInput = boostSupplier;
+    precisionInput = precisionSupplier;
 
     // Use addRequirements() here to declare subsystem dependencies.
     addRequirements(drivetrain);
@@ -64,8 +67,16 @@ public class UserArcadeDrive extends CommandBase {
     }
     // Calculate the linear and rotation speeds requested by the inputs using either the boost(max)
     // range, or the driver range
-    double linearSpeed = xSpeed * (boostInput.getAsBoolean() ? Rate.maxSpeed : Rate.driverSpeed);
-    double angularSpeed = zRotation * Rate.driverAngularSpeed;
+    var speed = Rate.driverSpeed;
+    var rotation = Rate.driverAngularSpeed;
+    if (precisionInput.getAsBoolean()) {
+      speed = Rate.precisionSpeed;
+    } else if (boostInput.getAsBoolean()) {
+      speed = Rate.maxSpeed;
+      rotation /= 2.0;
+    }
+    double linearSpeed = xSpeed * speed;
+    double angularSpeed = zRotation * rotation;
 
     // Apply the calculated speeds to the drivetrain
     drivetrain.driveChassisSpeeds(

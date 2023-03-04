@@ -24,6 +24,7 @@ public final class Constants {
 
     public static final class Bindings {
       public static final int groundIntake = 3;
+      public static final int doublesubIntake = 5;
       public static final int L2 = 4;
       public static final int L3 = 6;
       public static final int L1 = 11;
@@ -117,7 +118,7 @@ public final class Constants {
       public static final double ks = 0;
       public static final double kv = 0;
       public static final double ka = 0;
-      public static final double kp = 0;
+      public static final double kp = 5;
       public static final double ki = 0;
       public static final double kd = 0;
     }
@@ -175,11 +176,12 @@ public final class Constants {
       // Speeds in m/s rotations in rad/s
       public static final double maxSpeed = 4.7;
       public static final double maxAccel = 0.9 * 9.81;
-      public static final double maxAngularSpeed = 8;
-      public static final double maxAngularAccel = 15;
-      public static final double driverSpeed = 3.5;
-      public static final double driverAngularSpeed = 4;
+      public static final double maxAngularSpeed = 5;
+      public static final double maxAngularAccel = 2;
+      public static final double driverSpeed = 3;
+      public static final double driverAngularSpeed = 3;
       public static final double driverAccel = 4;
+      public static final double precisionSpeed = 1;
     }
 
     public static final class PathFollowing {

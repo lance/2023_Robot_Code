@@ -304,7 +304,7 @@ public class Arm extends SubsystemBase {
 
   public double calculateTurretVoltage(double setpoint) {
     return TurretFeedforward.calculate(setpoint)
-        + TurretPID.calculate(turretEncoder.getDistance() + turretOffset, setpoint);
+        + TurretPID.calculate(turretEncoder.getDistance(), setpoint);
   }
 
   private Matrix<N2, N1> getArmVoltages() {

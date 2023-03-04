@@ -19,16 +19,23 @@ public class ArmDefaultTrajectories {
     trajectories.put("init_to_home", new ArmTrajectory(simpleProfile(.07, 0.08, 0.14, 0.12)));
     trajectories.put("home_to_init", new ArmTrajectory(simpleProfile(.14, 0.12, 0.07, 0.08)));
 
-    trajectories.put("home_to_ground", new ArmTrajectory(simpleProfile(.14, .12, .65, -.04)));
-    trajectories.put("ground_to_home", new ArmTrajectory(simpleProfile(.65, -.04, .14, .12)));
+    trajectories.put("home_to_ground", new ArmTrajectory(simpleProfile(.14, .12, .65, -.08)));
+    trajectories.put("ground_to_home", new ArmTrajectory(simpleProfile(.65, -.08, .14, .12)));
 
-    trajectories.put("home_to_L3", new ArmTrajectory(simpleProfile(.14, .12, 1.3, 1.03)));
-    trajectories.put("L3_to_home", new ArmTrajectory(simpleProfile(1.3, 1.03, .14, .12)));
+    trajectories.put(
+        "home_to_L3",
+        new ArmTrajectory(simpleProfile(.14, .12, .57, .79))
+            .concatenate(new ArmTrajectory(simpleProfile(.57, .79, 1.33, 1.13))));
+    trajectories.put(
+        "L3_to_home",
+        new ArmTrajectory(simpleProfile(1.33, 1.13, .57, .79))
+            .concatenate(new ArmTrajectory(simpleProfile(.57, .79, .14, .12))));
 
-    trajectories.put("home_to_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .49)));
-    trajectories.put("L2_to_home", new ArmTrajectory(simpleProfile(.9, .49, .14, .12)));
+    trajectories.put("home_to_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .82)));
+    trajectories.put("L2_to_home", new ArmTrajectory(simpleProfile(.9, .82, .14, .12)));
 
-    // trajectories.put("home_to_doublesub", new ArmTrajectory(simpleProfile(.14, 0.12, 0, 0)))
+    trajectories.put("home_to_doublesub", new ArmTrajectory(simpleProfile(.14, 0.12, 0.65, 0.90)));
+    trajectories.put("doublesub_to_home", new ArmTrajectory(simpleProfile(.65, 0.90, 0.14, 0.12)));
   }
 
   public Pair<TrapezoidProfile, TrapezoidProfile> simpleProfile(
