@@ -73,8 +73,8 @@ public final class Constants {
       }
 
       public static final class Forearm {
-        public static final double initial = Units.degreesToRadians(-172);
-        public static final double offset = 3.254898;
+        public static final double initial = Units.degreesToRadians(-153);
+        public static final double offset = 3.749503;
         public static final double gear_ratio = 16.0 / 34.0;
         public static final int absPort = 12;
         public static final int APort = 10;

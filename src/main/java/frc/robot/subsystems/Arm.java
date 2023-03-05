@@ -423,6 +423,10 @@ public class Arm extends SubsystemBase {
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
 
+  public Matrix<N2, N1> getXY() {
+    return kinematics2D(getArmMeasuredStates().block(2, 1, 0, 0));
+  }
+
   @Override
   public void periodic() {
     // Check for encoder init

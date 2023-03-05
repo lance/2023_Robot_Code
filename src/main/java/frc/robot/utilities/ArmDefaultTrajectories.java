@@ -32,25 +32,25 @@ public class ArmDefaultTrajectories {
     trajectories.put(
         "HOME_L3",
         new ArmTrajectory(simpleProfile(.14, .12, .65, .9))
-            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, 1.18, 1.23))));
+            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, 1.16, 1.26))));
     trajectories.put(
         "L3_HOME",
-        new ArmTrajectory(simpleProfile(1.18, 1.23, .65, .9))
+        new ArmTrajectory(simpleProfile(1.16, 1.26, .65, .9))
             .concatenate(new ArmTrajectory(simpleProfile(.65, .9, .14, .12))));
 
     trajectories.put("HOME_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .9)));
     trajectories.put("L2_HOME", new ArmTrajectory(simpleProfile(.9, .9, .14, .12)));
 
-    trajectories.put("HOME_DOUBLESUB", new ArmTrajectory(simpleProfile(.14, 0.12, 0.65, 0.87)));
-    trajectories.put("DOUBLESUB_HOME", new ArmTrajectory(simpleProfile(.65, 0.87, 0.14, 0.12)));
+    trajectories.put("HOME_DOUBLESUB", new ArmTrajectory(simpleProfile(.14, 0.12, 0.65, 0.85)));
+    trajectories.put("DOUBLESUB_HOME", new ArmTrajectory(simpleProfile(.65, 0.85, 0.14, 0.12)));
 
     // Neutral trajectories
 
     trajectories.put("HOME_NEUTRAL", new ArmTrajectory(simpleProfile(.14, .12, .49, .49)));
     trajectories.put("NEUTRAL_HOME", new ArmTrajectory(simpleProfile(.49, 0.49, 0.14, 0.12)));
 
-    trajectories.put("NEUTRAL_L3", new ArmTrajectory(simpleProfile(.49, .49, 1.18, 1.23)));
-    trajectories.put("L3_NEUTRAL", new ArmTrajectory(simpleProfile(1.18, 1.23, .49, .49)));
+    trajectories.put("NEUTRAL_L3", new ArmTrajectory(simpleProfile(.49, .49, 1.16, 1.26)));
+    trajectories.put("L3_NEUTRAL", new ArmTrajectory(simpleProfile(1.16, 1.26, .49, .49)));
 
     trajectories.put("NEUTRAL_L2", new ArmTrajectory(simpleProfile(.49, .49, .9, .9)));
     trajectories.put("L2_NEUTRAL", new ArmTrajectory(simpleProfile(.9, .9, .49, .49)));
@@ -58,8 +58,8 @@ public class ArmDefaultTrajectories {
     trajectories.put("NEUTRAL_GROUND", new ArmTrajectory(simpleProfile(.49, .49, .65, -.08)));
     trajectories.put("GROUND_NEUTRAL", new ArmTrajectory(simpleProfile(.65, -.08, .49, .49)));
 
-    trajectories.put("NEUTRAL_DOUBLESUB", new ArmTrajectory(simpleProfile(.49, .49, .65, 0.9)));
-    trajectories.put("DOUBLESUB_NEUTRAL", new ArmTrajectory(simpleProfile(.65, .9, .49, .49)));
+    trajectories.put("NEUTRAL_DOUBLESUB", new ArmTrajectory(simpleProfile(.49, .49, .65, 0.85)));
+    trajectories.put("DOUBLESUB_NEUTRAL", new ArmTrajectory(simpleProfile(.85, .9, .49, .49)));
   }
 
   public Pair<TrapezoidProfile, TrapezoidProfile> simpleProfile(
