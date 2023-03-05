@@ -1,6 +1,7 @@
 package frc.robot.controls;
 
 import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.controller.PIDController;
@@ -170,7 +171,13 @@ public class DoubleJointedArmController {
                 proximalPID.calculate(measurement.get(0, 0), nextR.get(0, 0)),
                 forearmPID.calculate(measurement.get(1, 0), nextR.get(1, 0)));
 
-    return FF_result.plus(PID_result);
+    var combined = FF_result.plus(PID_result);
+    var clamped =
+        new MatBuilder<N2, N1>(Nat.N2(), Nat.N1())
+            .fill(
+                MathUtil.clamp(combined.get(0, 0), -9, 9),
+                MathUtil.clamp(combined.get(1, 0), -9, 9));
+    return clamped;
   }
 
   public Matrix<N2, N1> calculate(

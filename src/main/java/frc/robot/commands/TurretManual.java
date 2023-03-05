@@ -41,7 +41,5 @@ public class TurretManual extends CommandBase {
   }
 
   @Override
-  public void end(boolean interrupted) {
-    arm.setTurretSetpoint(0);
-  }
+  public void end(boolean interrupted) {}
 }

@@ -1,10 +1,12 @@
 package frc.robot.utilities;
 
 import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.Pair;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N4;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
 import frc.robot.Constants.armState;
 import frc.robot.subsystems.Arm;
@@ -20,14 +22,17 @@ public class ArmDefaultTrajectories {
     trajectories.put("INIT_HOME", new ArmTrajectory(simpleProfile(.07, 0.08, 0.14, 0.12)));
     trajectories.put("HOME_INIT", new ArmTrajectory(simpleProfile(.14, 0.12, 0.07, 0.08)));
 
+    var start = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.14, .12, 0, 0);
+    var mid = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.45, .12, 0, 0);
+    var end = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.65, -.08, 0, 0);
     trajectories.put(
         "HOME_GROUND",
-        new ArmTrajectory(simpleProfile(.14, .12, .45, .12))
-            .concatenate(new ArmTrajectory(simpleProfile(0.45, .12, .65, -.08))));
+        new ArmTrajectory(complexProfile(start, mid))
+            .concatenate(new ArmTrajectory(complexProfile(mid, end))));
     trajectories.put(
         "GROUND_HOME",
-        new ArmTrajectory(simpleProfile(.65, -.08, 0.45, .12))
-            .concatenate(new ArmTrajectory(simpleProfile(.45, .12, 0.14, .12))));
+        new ArmTrajectory(complexProfile(end, mid))
+            .concatenate(new ArmTrajectory(complexProfile(mid, start))));
 
     trajectories.put(
         "HOME_L3",
@@ -67,6 +72,11 @@ public class ArmDefaultTrajectories {
     return arm.motionProfile(
         new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(startx, starty),
         new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(endx, endy));
+  }
+
+  public Pair<TrapezoidProfile, TrapezoidProfile> complexProfile(
+      Matrix<N4, N1> start, Matrix<N4, N1> end) {
+    return arm.motionProfileVelocity(start, end);
   }
 
   public ArmTrajectory getTrajectory(Pair<armState, armState> trajPair) {

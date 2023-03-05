@@ -217,6 +217,30 @@ public class Arm extends SubsystemBase {
   }
 
   // Generate joint-space trapozidal motion profiles
+  public Pair<TrapezoidProfile, TrapezoidProfile> motionProfileVelocity(
+      Matrix<N4, N1> startState, Matrix<N4, N1> endState) {
+    // Inverse Kinematics to get the Thetas
+    Matrix<N2, N1> initialThetas =
+        inverseKinematics(startState.block(2, 1, 0, 0)); // Shoulder, then Elbow
+    Matrix<N2, N1> endThetas = inverseKinematics(endState.block(2, 1, 0, 0));
+    // Create the Motion Profiles
+    TrapezoidProfile profileShoulder =
+        new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                Constraints.proximalVelocity, Constraints.proximalAcceleration), // contraints
+            new TrapezoidProfile.State(endThetas.get(0, 0), endState.get(2, 0)), // endpoint
+            new TrapezoidProfile.State(
+                initialThetas.get(0, 0), startState.get(2, 0))); // startpoint
+    TrapezoidProfile profileElbow =
+        new TrapezoidProfile(
+            new TrapezoidProfile.Constraints(
+                Constraints.forearmVelocity, Constraints.forearmAcceleration), // contraints
+            new TrapezoidProfile.State(endThetas.get(1, 0), endState.get(3, 0)), // endpoint
+            new TrapezoidProfile.State(
+                initialThetas.get(1, 0), startState.get(3, 0))); // startpoint
+    return new Pair<>(profileShoulder, profileElbow); // Return as pair
+  }
+
   public Pair<TrapezoidProfile, TrapezoidProfile> motionProfile(
       Matrix<N2, N1> startXY, Matrix<N2, N1> endXY) {
     // Inverse Kinematics to get the Thetas
@@ -423,8 +447,28 @@ public class Arm extends SubsystemBase {
         .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
   }
 
+  public Command simpleMoveGenerator(double xDelta, double yDelta) {
+    return simpleTrajectory(
+        getXY().get(0, 0),
+        getXY().get(1, 0),
+        getXY().get(0, 0) + xDelta,
+        getXY().get(1, 0) + yDelta);
+  }
+
+  public Command simpleMove(double xDelta, double yDelta) {
+    return new ProxyCommand(() -> simpleMoveGenerator(xDelta, yDelta));
+  }
+
   public Matrix<N2, N1> getXY() {
-    return kinematics2D(getArmMeasuredStates().block(2, 1, 0, 0));
+    return kinematics2D(armSetpoint.block(2, 1, 0, 0));
+  }
+
+  public armState getState() {
+    return state;
+  }
+
+  public Command turretHome() {
+    return this.runOnce(() -> setTurretSetpoint(0));
   }
 
   @Override

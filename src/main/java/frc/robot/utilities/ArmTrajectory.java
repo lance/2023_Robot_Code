@@ -145,6 +145,19 @@ public class ArmTrajectory {
     return new ArmTrajectory(new_states);
   }
 
+  public ArmTrajectory reverse() {
+    if (states.isEmpty()) {
+      return this;
+    }
+
+    List<State> new_states = new ArrayList<>();
+    for (int i = states.size(); i-- > 0; ) {
+      new_states.add(new State(this.totalTime - states.get(i).time, states.get(i).state));
+    }
+
+    return new ArmTrajectory(new_states);
+  }
+
   public static class State {
     @JsonProperty("time")
     public double time;

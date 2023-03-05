@@ -10,6 +10,7 @@ import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.kGripper;
@@ -68,7 +69,8 @@ public class Gripper extends SubsystemBase {
 
     if (proximity > kGripper.proximityThreshold) {
       double colorRatio = (double) color.blue / (double) color.green;
-      if (4 < colorRatio && colorRatio < 8) return GamePiece.CONE;
+      if (4 < colorRatio && colorRatio < 8 && proximity > kGripper.coneProximityOverride)
+        return GamePiece.CONE;
       else if (0 < colorRatio && colorRatio < 2) return GamePiece.KUBE;
     }
     return GamePiece.NONE;
@@ -97,10 +99,11 @@ public class Gripper extends SubsystemBase {
     return this.startEnd(
             () -> setVoltage(kGripper.ejectVoltage),
             () -> {
-              setVoltage(0);
               gripperState = GamePiece.NONE;
             })
-        .until(() -> getGamePiece() == GamePiece.NONE);
+        .until(() -> getGamePiece() == GamePiece.NONE)
+        .andThen(new WaitCommand(0.25))
+        .andThen(this.runOnce(() -> setVoltage(0)));
   }
 
   public Command holdCommand() {

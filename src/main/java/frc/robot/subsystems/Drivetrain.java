@@ -46,8 +46,10 @@ import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
+import frc.robot.Constants.kAuto;
 import frc.robot.Constants.kDrivetrain.*;
 import frc.robot.Constants.kVision;
 import java.util.ArrayList;
@@ -145,6 +147,12 @@ public class Drivetrain extends SubsystemBase {
     rightEncoder.setDistancePerPulse(
         Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
     rightEncoder.setReverseDirection(true);
+    brakeMode(true);
+
+    leftLead.setSmartCurrentLimit(40);
+    leftFollow.setSmartCurrentLimit(40);
+    rightLead.setSmartCurrentLimit(40);
+    rightFollow.setSmartCurrentLimit(40);
 
     try {
       aprilTagFieldLayout =
@@ -183,7 +191,7 @@ public class Drivetrain extends SubsystemBase {
     leftLead.setIdleMode(nMode);
     leftFollow.setIdleMode(nMode);
     rightLead.setIdleMode(nMode);
-    leftFollow.setIdleMode(nMode);
+    rightFollow.setIdleMode(nMode);
   }
 
   // Simple arcade drive that uses a percentage (-1.00 to 1.00) of the max forward and angular
@@ -284,6 +292,10 @@ public class Drivetrain extends SubsystemBase {
     return DDPoseEstimator.getEstimatedPosition();
   }
 
+  public double getRoll() {
+    return gyro.getRoll();
+  }
+
   public Trajectory generateTrajectory(Pose2d endPose, ArrayList<Translation2d> waypoints) {
 
     // Starting Position
@@ -306,11 +318,31 @@ public class Drivetrain extends SubsystemBase {
     return trajectory;
   }
 
+  public Command AutoBalanceCommand() {
+    return this.startEnd(
+            () -> driveVoltages(kAuto.chargeTipVoltage, kAuto.chargeTipVoltage),
+            () -> driveVoltages(0, 0))
+        .withTimeout(kAuto.tipTimeout)
+        .andThen(
+            this.startEnd(
+                    () -> driveVoltages(kAuto.chargeCreepVoltage, kAuto.chargeCreepVoltage),
+                    () -> driveVoltages(0, 0))
+                .until(() -> getRoll() < kAuto.chargeStopAngle)
+                .withTimeout(kAuto.creepTimeout));
+  }
+
+  public Command mobilityAuto() {
+    return this.startEnd(() -> driveVoltages(4, 4), () -> driveVoltages(-4, -4))
+        .withTimeout(kAuto.mobilityTime)
+        .andThen(() -> driveVoltages(0, 0));
+  }
+
   private void shuffleBoardInit() {
     SBSensors = SBTab.getLayout("Sensors", BuiltInLayouts.kList).withSize(2, 4).withPosition(0, 0);
     SBSensors.add("NavX2", gyro).withWidget(BuiltInWidgets.kGyro);
     SBSensors.add("Left Encoder", leftEncoder).withWidget(BuiltInWidgets.kEncoder);
     SBSensors.add("Right Encoder", rightEncoder).withWidget(BuiltInWidgets.kEncoder);
+    SBSensors.addDouble("Navx2", () -> gyro.getRoll());
     SBTab.add("Pose Estimate", robotField2d)
         .withWidget(BuiltInWidgets.kField)
         .withSize(7, 4)

@@ -33,9 +33,19 @@ public final class Constants {
     }
   }
 
+  public static final class kAuto {
+    public static final double chargeTipVoltage = 4;
+    public static final double chargeCreepVoltage = 2;
+    public static final double chargeStopAngle = 12;
+    public static final double tipTimeout = 0.7;
+    public static final double creepTimeout = 3;
+    public static final double mobilityTime = 0.5;
+  }
+
   public static final class kGripper {
     public static final boolean inverted = true;
     public static final int proximityThreshold = 150;
+    public static final int coneProximityOverride = 300;
     public static final double intakeVoltageCone = 5;
     public static final double intakeVoltageKube = 3;
     public static final double ejectVoltage = -2;
@@ -73,8 +83,8 @@ public final class Constants {
       }
 
       public static final class Forearm {
-        public static final double initial = Units.degreesToRadians(-153);
-        public static final double offset = 3.749503;
+        public static final double initial = Units.degreesToRadians(-165);
+        public static final double offset = 2.709544;
         public static final double gear_ratio = 16.0 / 34.0;
         public static final int absPort = 12;
         public static final int APort = 10;
@@ -180,10 +190,10 @@ public final class Constants {
       public static final double maxSpeed = 4.7;
       public static final double maxAccel = 0.9 * 9.81;
       public static final double maxAngularSpeed = 5;
-      public static final double maxAngularAccel = 2;
+      public static final double maxAngularAccel = 3;
       public static final double driverSpeed = 3;
       public static final double driverAngularSpeed = 3;
-      public static final double driverAccel = 4;
+      public static final double driverAccel = 10;
       public static final double precisionSpeed = 1;
     }
 

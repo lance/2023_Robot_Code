@@ -4,9 +4,10 @@
 
 package frc.robot;
 
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
-import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -14,6 +15,7 @@ import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.Constants.OperatorInterface.Bindings;
 import frc.robot.Constants.armState;
+import frc.robot.commands.ArmGripperCommands;
 import frc.robot.commands.TurretManual;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
@@ -38,6 +40,8 @@ public class RobotContainer {
   private final Drivetrain drivetrain = new Drivetrain();
   private final Arm arm = new Arm();
   private final Gripper gripper = new Gripper();
+  private final ArmGripperCommands armGripperCommands = new ArmGripperCommands(arm, gripper);
+  private final SendableChooser<Command> autoSelect = new SendableChooser<Command>();
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -49,6 +53,12 @@ public class RobotContainer {
             () -> driverController.getLeftTriggerAxis() > 0.1,
             () -> driverController.getRightTriggerAxis() > 0.1,
             drivetrain));
+
+    autoSelect.setDefaultOption("Do nothing", new WaitCommand(0));
+    autoSelect.addOption("Mobility", drivetrain.mobilityAuto());
+    autoSelect.addOption("Auto Balance", drivetrain.AutoBalanceCommand());
+    SmartDashboard.putData("Auto Selector", autoSelect);
+
     // Configure the trigger bindings
     configureBindings();
   }
@@ -63,40 +73,20 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    armJoystick
-        .button(Bindings.home)
-        .onTrue(
-            arm.gotoState(armState.HOME)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-    armJoystick
-        .button(Bindings.ground)
-        .onTrue(
-            arm.gotoState(armState.GROUND)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-    armJoystick
-        .button(Bindings.L2)
-        .onTrue(
-            arm.gotoState(armState.L2).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-    armJoystick
-        .button(Bindings.L3)
-        .onTrue(
-            arm.gotoState(armState.L3).withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
-    armJoystick
-        .button(Bindings.doublesub)
-        .onTrue(
-            arm.gotoState(armState.DOUBLESUB)
-                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+    armJoystick.button(Bindings.home).onTrue(arm.gotoState(armState.HOME));
+    armJoystick.button(Bindings.ground).onTrue(arm.gotoState(armState.GROUND));
+    armJoystick.button(Bindings.L2).onTrue(arm.gotoState(armState.L2));
+    armJoystick.button(Bindings.L3).onTrue(arm.gotoState(armState.L3));
+    armJoystick.button(Bindings.doublesub).onTrue(arm.gotoState(armState.DOUBLESUB));
 
     armJoystick
         .button(Bindings.intake)
-        .toggleOnTrue(
-            new ConditionalCommand(
-                gripper.intakeCommand(GamePiece.CONE),
-                gripper.intakeCommand(GamePiece.KUBE),
-                () -> armJoystick.getThrottle() < 0.5));
-    armJoystick.button(Bindings.place).onTrue(gripper.ejectCommand());
+        .toggleOnTrue(armGripperCommands.intakeCommand(() -> armJoystick.getThrottle() < 0.5));
+
+    armJoystick.button(Bindings.place).onTrue(armGripperCommands.placeCommad());
 
     armJoystick.pov(0).whileTrue(new TurretManual(() -> -0.5 * armJoystick.getTwist(), arm));
+    armJoystick.pov(180).onTrue(arm.turretHome());
   }
 
   /**
@@ -106,25 +96,9 @@ public class RobotContainer {
    */
   public Command getAutoCommand() {
     return gripper.intakeCommand(GamePiece.KUBE);
-    /* .andThen(
-        new StartEndCommand(
-            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(-0.5, 0, 0)),
-            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
-            drivetrain))
-    .withTimeout(1.5)
-    .andThen(
-        new StartEndCommand(
-            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0.5, 0, 0)),
-            () -> drivetrain.driveChassisSpeeds(new ChassisSpeeds(0, 0, 0)),
-            drivetrain))
-    .withTimeout(1.5);*/
   }
 
   public Command getTelopInitCommand() {
     return arm.gotoState(armState.HOME);
-  }
-
-  private Boolean turretEnable() {
-    return armJoystick.getHID().getPOV() == 0;
   }
 }
