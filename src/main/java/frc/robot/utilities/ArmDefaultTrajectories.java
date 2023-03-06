@@ -19,43 +19,41 @@ public class ArmDefaultTrajectories {
   public ArmDefaultTrajectories(Arm arm) {
     this.arm = arm;
 
-    trajectories.put("INIT_HOME", new ArmTrajectory(simpleProfile(.07, 0.08, 0.14, 0.12)));
-    trajectories.put("HOME_INIT", new ArmTrajectory(simpleProfile(.14, 0.12, 0.07, 0.08)));
+    trajectories.put("INIT_HOME", new ArmTrajectory(simpleProfile(.07, 0.08, 0.18, 0.16)));
+    trajectories.put("HOME_INIT", trajectories.get("INIT_HOME").reverse());
 
-    var start = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.14, .12, 0, 0);
-    var mid = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.45, .12, 0, 0);
+    var start = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.18, .16, 0, 0);
+    var mid = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.45, .16, -0.75, 0.25);
     var end = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.65, -.08, 0, 0);
     trajectories.put(
         "HOME_GROUND",
         new ArmTrajectory(complexProfile(start, mid))
             .concatenate(new ArmTrajectory(complexProfile(mid, end))));
-    trajectories.put(
-        "GROUND_HOME",
-        new ArmTrajectory(complexProfile(end, mid))
-            .concatenate(new ArmTrajectory(complexProfile(mid, start))));
 
-    trajectories.put(
-        "HOME_L3",
-        new ArmTrajectory(simpleProfile(.14, .12, .65, .9))
-            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, 1.16, 1.26))));
+    trajectories.put("GROUND_HOME", trajectories.get("HOME_GROUND").reverse());
+
+    start = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(1.16, 1.26, 0, 0);
+    mid = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.65, .9, 0.1, -0.5);
+    end = new MatBuilder<>(Nat.N4(), Nat.N1()).fill(.18, .16, 0, 0);
     trajectories.put(
         "L3_HOME",
-        new ArmTrajectory(simpleProfile(1.16, 1.26, .65, .9))
-            .concatenate(new ArmTrajectory(simpleProfile(.65, .9, .14, .12))));
+        new ArmTrajectory(complexProfile(start, mid))
+            .concatenate(new ArmTrajectory(complexProfile(mid, end))));
+    trajectories.put("HOME_L3", trajectories.get("L3_HOME").reverse());
 
-    trajectories.put("HOME_L2", new ArmTrajectory(simpleProfile(.14, .12, .9, .9)));
-    trajectories.put("L2_HOME", new ArmTrajectory(simpleProfile(.9, .9, .14, .12)));
+    trajectories.put("L2_HOME", new ArmTrajectory(simpleProfile(.9, .9, .18, .16)));
+    trajectories.put("HOME_L2", trajectories.get("L2_HOME").reverse());
 
-    trajectories.put("HOME_DOUBLESUB", new ArmTrajectory(simpleProfile(.14, 0.12, 0.65, 0.85)));
-    trajectories.put("DOUBLESUB_HOME", new ArmTrajectory(simpleProfile(.65, 0.85, 0.14, 0.12)));
+    trajectories.put("HOME_DOUBLESUB", new ArmTrajectory(simpleProfile(.18, 0.16, 0.65, 0.85)));
+    trajectories.put("DOUBLESUB_HOME", trajectories.get("HOME_DOUBLESUB").reverse());
 
     // Neutral trajectories
 
-    trajectories.put("HOME_NEUTRAL", new ArmTrajectory(simpleProfile(.14, .12, .49, .49)));
-    trajectories.put("NEUTRAL_HOME", new ArmTrajectory(simpleProfile(.49, 0.49, 0.14, 0.12)));
+    trajectories.put("HOME_NEUTRAL", new ArmTrajectory(simpleProfile(.17, .16, .49, .49)));
+    trajectories.put("NEUTRAL_HOME", new ArmTrajectory(simpleProfile(.49, 0.49, 0.18, 0.16)));
 
-    trajectories.put("NEUTRAL_L3", new ArmTrajectory(simpleProfile(.49, .49, 1.16, 1.26)));
     trajectories.put("L3_NEUTRAL", new ArmTrajectory(simpleProfile(1.16, 1.26, .49, .49)));
+    trajectories.put("NEUTRAL_L3", trajectories.get("L3_NEUTRAL").reverse());
 
     trajectories.put("NEUTRAL_L2", new ArmTrajectory(simpleProfile(.49, .49, .9, .9)));
     trajectories.put("L2_NEUTRAL", new ArmTrajectory(simpleProfile(.9, .9, .49, .49)));

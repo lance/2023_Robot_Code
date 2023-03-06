@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.DoubleArrayLogEntry;
@@ -39,6 +40,8 @@ public class Gripper extends SubsystemBase {
     gripperNEO1.setInverted(!kGripper.inverted);
     gripperNEO2.setInverted(kGripper.inverted);
     gripperNEO1.setSmartCurrentLimit(kGripper.stallCurrentLimit, kGripper.freeCurrentLimit);
+    gripperNEO1.setIdleMode(IdleMode.kBrake);
+    gripperNEO2.setIdleMode(IdleMode.kBrake);
 
     colorSensor = new PicoColorSensor();
     colorSensor.setDebugPrints(false);

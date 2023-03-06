@@ -150,9 +150,14 @@ public class ArmTrajectory {
       return this;
     }
 
-    List<State> new_states = new ArrayList<>();
+    var reverse =
+        new MatBuilder<N4, N4>(Nat.N4(), Nat.N4())
+            .fill(1, 0, 0, 0, 0, 1, 0, 0, 0, 0, -1, 0, 0, 0, 0, -1);
+    List<State> new_states = new ArrayList<State>();
+
     for (int i = states.size(); i-- > 0; ) {
-      new_states.add(new State(this.totalTime - states.get(i).time, states.get(i).state));
+      new_states.add(
+          new State(this.totalTime - states.get(i).time, reverse.times(states.get(i).state)));
     }
 
     return new ArmTrajectory(new_states);

@@ -57,10 +57,10 @@ public final class Constants {
 
   public static final class kArm {
     public static final class Constraints {
-      public static final double proximalVelocity = 1.4;
-      public static final double proximalAcceleration = .6;
-      public static final double forearmVelocity = 1.75;
-      public static final double forearmAcceleration = .85;
+      public static final double proximalVelocity = 3;
+      public static final double proximalAcceleration = 2;
+      public static final double forearmVelocity = 3;
+      public static final double forearmAcceleration = 3;
     }
 
     public static final class Motors {

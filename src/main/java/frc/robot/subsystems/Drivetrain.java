@@ -332,7 +332,7 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public Command mobilityAuto() {
-    return this.startEnd(() -> driveVoltages(4, 4), () -> driveVoltages(-4, -4))
+    return this.startEnd(() -> driveVoltages(-1, -1), () -> driveVoltages(1, 1))
         .withTimeout(kAuto.mobilityTime)
         .andThen(() -> driveVoltages(0, 0));
   }

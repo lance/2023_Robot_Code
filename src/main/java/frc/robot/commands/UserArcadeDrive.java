@@ -58,11 +58,11 @@ public class UserArcadeDrive extends CommandBase {
     double xSpeed = Drivetrain.NonLinear(MathUtil.clamp(linearInput.getAsDouble(), -1.0, 1.0));
     double zRotation = Drivetrain.NonLinear(MathUtil.clamp(angularInput.getAsDouble(), -1.0, 1.0));
 
-    if (Math.abs(xSpeed) <= .1) {
+    if (Math.abs(xSpeed) <= .025) {
       xSpeed = 0;
     }
 
-    if (Math.abs(zRotation) <= .1) {
+    if (Math.abs(zRotation) <= .025) {
       zRotation = 0;
     }
     // Calculate the linear and rotation speeds requested by the inputs using either the boost(max)
