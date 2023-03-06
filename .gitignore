@@ -169,3 +169,7 @@ networktables.json
 
 #Deploy data
 src/main/deploy/gitdata.txt
+
+# Logging files
+*.wpilog
+
