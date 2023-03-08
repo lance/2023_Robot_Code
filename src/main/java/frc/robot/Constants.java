@@ -174,8 +174,8 @@ public final class Constants {
     }
 
     public final class TrajectoryConstants {
-      public static final int kMaxSpeedMetersPerSecond = 12;
-      public static final int kMaxAccelerationMetersPerSecondSquared = 12;
+      public static final int kMaxSpeedMetersPerSecond = 2;
+      public static final int kMaxAccelerationMetersPerSecondSquared = 1;
       public static final boolean setReversed = true;
     }
 
@@ -190,7 +190,7 @@ public final class Constants {
       public static final double maxSpeed = 4.7;
       public static final double maxAccel = 0.9 * 9.81;
       public static final double maxAngularSpeed = 5;
-      public static final double maxAngularAccel = 3;
+      public static final double maxAngularAccel = 8;
       public static final double driverSpeed = 3;
       public static final double driverAngularSpeed = 3;
       public static final double driverAccel = 10;

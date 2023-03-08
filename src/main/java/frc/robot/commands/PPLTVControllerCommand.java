@@ -1,19 +1,18 @@
 package frc.robot.commands;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.server.PathPlannerServer;
 import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
 import edu.wpi.first.math.controller.LTVDifferentialDriveController;
-import edu.wpi.first.math.controller.PIDController;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
-import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -23,28 +22,23 @@ import java.util.function.Supplier;
 
 public class PPLTVControllerCommand extends CommandBase {
   private final Timer timer = new Timer();
-  private final boolean usePID;
   private final PathPlannerTrajectory trajectory;
   private final Supplier<Pose2d> poseSupplier;
   private final LTVDifferentialDriveController controller;
-  private final SimpleMotorFeedforward feedforward;
-  private final DifferentialDriveKinematics kinematics;
   private final Supplier<DifferentialDriveWheelSpeeds> speedsSupplier;
-  private final PIDController leftController;
-  private final PIDController rightController;
   private final Consumer<DifferentialDriveWheelVoltages> output;
   private final boolean useAllianceColor;
 
-  private DifferentialDriveWheelSpeeds prevSpeeds;
-  private double prevTime;
-
   private PathPlannerTrajectory transformedTrajectory;
+
+  private static final Field2d logField = new Field2d();
+  private static final FieldObject2d desired = logField.getObject("Desired");
 
   private static Consumer<PathPlannerTrajectory> logActiveTrajectory = null;
   private static Consumer<Pose2d> logTargetPose = null;
-  private static Consumer<ChassisSpeeds> logSetpoint = null;
-  private static BiConsumer<Translation2d, Rotation2d> logError =
-      PPLTVControllerCommand::defaultLogError;
+  private static Consumer<DifferentialDriveWheelVoltages> logSetpoint = null;
+  // private static BiConsumer<Translation2d, Rotation2d> logError =
+  //    PPLTVControllerCommand::defaultLogError;
 
   /**
    * Constructs a new PPRamseteCommand that, when executed, will follow the provided trajectory. PID
@@ -58,12 +52,8 @@ public class PPLTVControllerCommand extends CommandBase {
    * @param poseSupplier A function that supplies the robot pose - use one of the odometry classes
    *     to provide this.
    * @param controller The RAMSETE controller used to follow the trajectory.
-   * @param feedforward The feedforward to use for the drive.
-   * @param kinematics The kinematics for the robot drivetrain.
    * @param speedsSupplier A function that supplies the speeds of the left and right sides of the
    *     robot drive.
-   * @param leftController The PIDController for the left side of the robot drive.
-   * @param rightController The PIDController for the right side of the robot drive.
    * @param outputVolts A function that consumes the computed left and right outputs (in volts) for
    *     the robot drive.
    * @param useAllianceColor Should the path states be automatically transformed based on alliance
@@ -75,27 +65,17 @@ public class PPLTVControllerCommand extends CommandBase {
       PathPlannerTrajectory trajectory,
       Supplier<Pose2d> poseSupplier,
       LTVDifferentialDriveController controller,
-      SimpleMotorFeedforward feedforward,
-      DifferentialDriveKinematics kinematics,
       Supplier<DifferentialDriveWheelSpeeds> speedsSupplier,
-      PIDController leftController,
-      PIDController rightController,
       Consumer<DifferentialDriveWheelVoltages> outputVolts,
       boolean useAllianceColor,
       Subsystem... requirements) {
     this.trajectory = trajectory;
     this.poseSupplier = poseSupplier;
     this.controller = controller;
-    this.feedforward = feedforward;
-    this.kinematics = kinematics;
     this.speedsSupplier = speedsSupplier;
-    this.leftController = leftController;
-    this.rightController = rightController;
     this.output = outputVolts;
     this.useAllianceColor = useAllianceColor;
 
-    this.usePID = true;
-
     addRequirements(requirements);
 
     if (useAllianceColor && trajectory.fromGUI && trajectory.getInitialPose().getX() > 8.27) {
@@ -120,11 +100,8 @@ public class PPLTVControllerCommand extends CommandBase {
    *     to provide this.
    * @param controller The RAMSETE controller used to follow the trajectory.
    * @param feedforward The feedforward to use for the drive.
-   * @param kinematics The kinematics for the robot drivetrain.
    * @param speedsSupplier A function that supplies the speeds of the left and right sides of the
    *     robot drive.
-   * @param leftController The PIDController for the left side of the robot drive.
-   * @param rightController The PIDController for the right side of the robot drive.
    * @param outputVolts A function that consumes the computed left and right outputs (in volts) for
    *     the robot drive.
    * @param requirements The subsystems to require.
@@ -133,104 +110,10 @@ public class PPLTVControllerCommand extends CommandBase {
       PathPlannerTrajectory trajectory,
       Supplier<Pose2d> poseSupplier,
       LTVDifferentialDriveController controller,
-      SimpleMotorFeedforward feedforward,
-      DifferentialDriveKinematics kinematics,
       Supplier<DifferentialDriveWheelSpeeds> speedsSupplier,
-      PIDController leftController,
-      PIDController rightController,
       Consumer<DifferentialDriveWheelVoltages> outputVolts,
       Subsystem... requirements) {
-    this(
-        trajectory,
-        poseSupplier,
-        controller,
-        feedforward,
-        kinematics,
-        speedsSupplier,
-        leftController,
-        rightController,
-        outputVolts,
-        false,
-        requirements);
-  }
-
-  /**
-   * Constructs a new PPRamseteCommand that, when executed, will follow the provided trajectory.
-   * Performs no PID control and calculates no feedforwards; outputs are the raw wheel speeds from
-   * the RAMSETE controller, and will need to be converted into a usable form by the user.
-   *
-   * @param trajectory The trajectory to follow.
-   * @param poseSupplier A function that supplies the robot pose - use one of the odometry classes
-   *     to provide this.
-   * @param controller The RAMSETE follower used to follow the trajectory.
-   * @param kinematics The kinematics for the robot drivetrain.
-   * @param outputMetersPerSecond A function that consumes the computed left and right wheel speeds.
-   * @param useAllianceColor Should the path states be automatically transformed based on alliance
-   *     color? In order for this to work properly, you MUST create your path on the blue side of
-   *     the field.
-   * @param requirements The subsystems to require.
-   */
-  public PPLTVControllerCommand(
-      PathPlannerTrajectory trajectory,
-      Supplier<Pose2d> poseSupplier,
-      LTVDifferentialDriveController controller,
-      DifferentialDriveKinematics kinematics,
-      Consumer<DifferentialDriveWheelVoltages> outputMetersPerSecond,
-      boolean useAllianceColor,
-      Subsystem... requirements) {
-    this.trajectory = trajectory;
-    this.poseSupplier = poseSupplier;
-    this.controller = controller;
-    this.kinematics = kinematics;
-    this.output = outputMetersPerSecond;
-
-    this.feedforward = null;
-    this.speedsSupplier = null;
-    this.leftController = null;
-    this.rightController = null;
-    this.useAllianceColor = useAllianceColor;
-
-    this.usePID = false;
-
-    addRequirements(requirements);
-
-    if (useAllianceColor && trajectory.fromGUI && trajectory.getInitialPose().getX() > 8.27) {
-      DriverStation.reportWarning(
-          "You have constructed a path following command that will automatically transform path states depending"
-              + " on the alliance color, however, it appears this path was created on the red side of the field"
-              + " instead of the blue side. This is likely an error.",
-          false);
-    }
-  }
-
-  /**
-   * Constructs a new PPRamseteCommand that, when executed, will follow the provided trajectory.
-   * Performs no PID control and calculates no feedforwards; outputs are the raw wheel speeds from
-   * the RAMSETE controller, and will need to be converted into a usable form by the user.
-   *
-   * @param trajectory The trajectory to follow.
-   * @param poseSupplier A function that supplies the robot pose - use one of the odometry classes
-   *     to provide this.
-   * @param controller The RAMSETE follower used to follow the trajectory.
-   * @param kinematics The kinematics for the robot drivetrain.
-   * @param outputMetersPerSecond A function that consumes the computed left and right wheel speeds.
-   * @param requirements The subsystems to require.
-   */
-  public PPLTVControllerCommand(
-      PathPlannerTrajectory trajectory,
-      Supplier<Pose2d> poseSupplier,
-      LTVDifferentialDriveController controller,
-      DifferentialDriveKinematics kinematics,
-      Consumer<DifferentialDriveWheelVoltages> outputMetersPerSecond,
-      Subsystem... requirements) {
-    this(
-        trajectory,
-        poseSupplier,
-        controller,
-        kinematics,
-        outputMetersPerSecond,
-        false,
-        requirements);
+    this(trajectory, poseSupplier, controller, speedsSupplier, outputVolts, false, requirements);
   }
 
   @Override
@@ -243,28 +126,12 @@ public class PPLTVControllerCommand extends CommandBase {
       transformedTrajectory = trajectory;
     }
 
-    this.prevTime = -1;
-
     if (logActiveTrajectory != null) {
       logActiveTrajectory.accept(transformedTrajectory);
     }
 
-    PathPlannerTrajectory.PathPlannerState initialState = transformedTrajectory.getInitialState();
-
-    this.prevSpeeds =
-        this.kinematics.toWheelSpeeds(
-            new ChassisSpeeds(
-                initialState.velocityMetersPerSecond,
-                0,
-                initialState.curvatureRadPerMeter * initialState.velocityMetersPerSecond));
-
     this.timer.reset();
     this.timer.start();
-
-    if (this.usePID) {
-      this.leftController.reset();
-      this.rightController.reset();
-    }
 
     PathPlannerServer.sendActivePath(transformedTrajectory.getStates());
   }
@@ -272,17 +139,13 @@ public class PPLTVControllerCommand extends CommandBase {
   @Override
   public void execute() {
     double currentTime = this.timer.get();
-    double dt = currentTime - this.prevTime;
-
-    if (this.prevTime < 0) {
-      this.prevTime = currentTime;
-      return;
-    }
-
     Pose2d currentPose = this.poseSupplier.get();
+
     PathPlannerTrajectory.PathPlannerState desiredState =
         (PathPlannerTrajectory.PathPlannerState) transformedTrajectory.sample(currentTime);
 
+    logField.setRobotPose(currentPose);
+    desired.setPose(desiredState.poseMeters);
     PathPlannerServer.sendPathFollowingData(desiredState.poseMeters, currentPose);
 
     DifferentialDriveWheelVoltages targetDifferentialDriveWheelVoltages =
@@ -292,28 +155,26 @@ public class PPLTVControllerCommand extends CommandBase {
             this.speedsSupplier.get().rightMetersPerSecond,
             desiredState);
 
-    // double leftVoltSetpoint = targetDifferentialDriveWheelVoltages.left;
-    // double rightVoltSetpoint = targetDifferentialDriveWheelVoltages.right;
-
-    // double leftOutput;
-    // double rightOutput;
-
     this.output.accept(targetDifferentialDriveWheelVoltages);
-    // this.prevVolts = targetWheelSpeeds;
-    this.prevTime = currentTime;
 
     if (logTargetPose != null) {
       logTargetPose.accept(desiredState.poseMeters);
     }
 
-    if (logError != null) {
+    /*if (logError != null) {
       logError.accept(
           currentPose.getTranslation().minus(desiredState.poseMeters.getTranslation()),
           currentPose.getRotation().minus(desiredState.poseMeters.getRotation()));
-    }
+    }*/
+    defaultLogError(
+        currentPose.getTranslation().minus(desiredState.poseMeters.getTranslation()),
+        currentPose.getRotation().minus(desiredState.poseMeters.getRotation()),
+        this.speedsSupplier.get().leftMetersPerSecond,
+        this.speedsSupplier.get().rightMetersPerSecond,
+        desiredState);
 
     if (logSetpoint != null) {
-      // logSetpoint.accept(targetDifferentialDriveWheelVoltages);
+      logSetpoint.accept(targetDifferentialDriveWheelVoltages);
     }
   }
 
@@ -333,10 +194,22 @@ public class PPLTVControllerCommand extends CommandBase {
     return this.timer.hasElapsed(transformedTrajectory.getTotalTimeSeconds());
   }
 
-  private static void defaultLogError(Translation2d translationError, Rotation2d rotationError) {
-    SmartDashboard.putNumber("PPRamseteCommand/xErrorMeters", translationError.getX());
-    SmartDashboard.putNumber("PPRamseteCommand/yErrorMeters", translationError.getY());
-    SmartDashboard.putNumber("PPRamseteCommand/rotationErrorDegrees", rotationError.getDegrees());
+  private static void defaultLogError(
+      Translation2d translationError,
+      Rotation2d rotationError,
+      double leftMetersPerSecond,
+      double rightMetersPerSecond,
+      PathPlannerState desiredState) {
+    SmartDashboard.putNumber("PPLTVControllerCommand/xErrorMeters", translationError.getX());
+    SmartDashboard.putNumber("PPLTVControllerCommand/yErrorMeters", translationError.getY());
+    SmartDashboard.putNumber(
+        "PPLTVControllerCommand/rotationErrorDegrees", rotationError.getDegrees());
+    SmartDashboard.putData("Blah blah", logField);
+    SmartDashboard.putNumber("Left Speed: ", leftMetersPerSecond);
+    SmartDashboard.putNumber("Right Speed: ", rightMetersPerSecond);
+    SmartDashboard.putNumber("Forward desired: ", desiredState.velocityMetersPerSecond);
+    SmartDashboard.putNumber("angular desired: ", desiredState.angularVelocityRadPerSec);
+    SmartDashboard.putNumber("Desired accel: ", desiredState.accelerationMetersPerSecondSq);
   }
 
   /**
@@ -355,11 +228,11 @@ public class PPLTVControllerCommand extends CommandBase {
   public static void setLoggingCallbacks(
       Consumer<PathPlannerTrajectory> logActiveTrajectory,
       Consumer<Pose2d> logTargetPose,
-      Consumer<ChassisSpeeds> logSetpoint,
+      Consumer<DifferentialDriveWheelVoltages> logSetpoint,
       BiConsumer<Translation2d, Rotation2d> logError) {
-    // PPLTVControllerCommand.logActiveTrajectory = logActiveTrajectory;
+    PPLTVControllerCommand.logActiveTrajectory = logActiveTrajectory;
     PPLTVControllerCommand.logTargetPose = logTargetPose;
     PPLTVControllerCommand.logSetpoint = logSetpoint;
-    PPLTVControllerCommand.logError = logError;
+    // PPLTVControllerCommand.logError = logError;
   }
 }

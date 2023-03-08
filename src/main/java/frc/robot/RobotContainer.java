@@ -11,7 +11,6 @@ import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.OperatorInterface;
 import frc.robot.Constants.OperatorInterface.Bindings;
 import frc.robot.Constants.armState;
@@ -95,7 +94,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return gripper.intakeCommand(GamePiece.KUBE);
+    return drivetrain.testPath();
   }
 
   public Command getTelopInitCommand() {

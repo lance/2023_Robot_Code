@@ -7,6 +7,10 @@ package frc.robot.subsystems;
 import static edu.wpi.first.math.system.plant.LinearSystemId.identifyDrivetrainSystem;
 
 import com.kauailabs.navx.frc.AHRS;
+import com.pathplanner.lib.PathConstraints;
+import com.pathplanner.lib.PathPlanner;
+import com.pathplanner.lib.PathPlannerTrajectory;
+import com.pathplanner.lib.PathPoint;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -15,11 +19,11 @@ import edu.wpi.first.apriltag.AprilTagFields;
 import edu.wpi.first.math.MatBuilder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Nat;
-import edu.wpi.first.math.controller.DifferentialDriveAccelerationLimiter;
 import edu.wpi.first.math.controller.DifferentialDriveFeedforward;
 import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
 import edu.wpi.first.math.controller.LTVDifferentialDriveController;
 import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -35,6 +39,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.util.datalog.DataLog;
 import edu.wpi.first.util.datalog.DoubleArrayLogEntry;
 import edu.wpi.first.util.datalog.DoubleLogEntry;
+import edu.wpi.first.wpilibj.CounterBase.EncodingType;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.Encoder;
 import edu.wpi.first.wpilibj.SPI.Port;
@@ -47,11 +52,13 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.kAuto;
 import frc.robot.Constants.kDrivetrain.*;
 import frc.robot.Constants.kVision;
+import frc.robot.commands.PPLTVControllerCommand;
 import java.util.ArrayList;
 import java.util.Optional;
 import org.photonvision.EstimatedRobotPose;
@@ -101,15 +108,23 @@ public class Drivetrain extends SubsystemBase {
   private DifferentialDriveKinematics driveKinematics =
       new DifferentialDriveKinematics(Dimensions.trackWidthMeters);
 
-  private DifferentialDriveAccelerationLimiter accelLimiter =
-      new DifferentialDriveAccelerationLimiter(
-          drivetrainModel, Dimensions.trackWidthMeters, Rate.maxAccel, Rate.maxAngularAccel);
+  private SlewRateLimiter accelLimiter = new SlewRateLimiter(Rate.maxAccel);
+  private SlewRateLimiter angularAccelLimter = new SlewRateLimiter(Rate.maxAngularAccel);
 
   private DifferentialDrivePoseEstimator DDPoseEstimator;
 
   // Create encoder and gyro objects
-  private Encoder leftEncoder = new Encoder(Encoders.leftAPort, Encoders.leftBPort);
-  private Encoder rightEncoder = new Encoder(Encoders.rightAPort, Encoders.rightBPort);
+  private Encoder leftEncoder =
+      new Encoder(
+          Encoders.leftAPort, Encoders.leftBPort, Dimensions.kInvertDrive, EncodingType.k1X);
+  private Encoder rightEncoder =
+      new Encoder(
+          Encoders.rightAPort, Encoders.rightBPort, !Dimensions.kInvertDrive, EncodingType.k1X);
+
+  private DifferentialDriveWheelSpeeds encoderSpeeds = new DifferentialDriveWheelSpeeds();
+  private SlewRateLimiter leftVelocityLimiter = new SlewRateLimiter(15);
+  private SlewRateLimiter rightVelocityLimiter = new SlewRateLimiter(15);
+
   private final AHRS gyro = new AHRS(Port.kMXP);
 
   // Create vision objects
@@ -132,8 +147,8 @@ public class Drivetrain extends SubsystemBase {
       new DoubleArrayLogEntry(log, "Drivetrain/lastWheelSpeeds");
   private DoubleArrayLogEntry logVoltages = new DoubleArrayLogEntry(log, "Drivetrain/voltages");
   private DoubleArrayLogEntry logPoseEstimate =
-      new DoubleArrayLogEntry(log, "Driverain/poseEstimate");
-  private DoubleArrayLogEntry logPhotonPose = new DoubleArrayLogEntry(log, "Driverain/photonPose");
+      new DoubleArrayLogEntry(log, "Drivetrain/poseEstimate");
+  private DoubleArrayLogEntry logPhotonPose = new DoubleArrayLogEntry(log, "Drivetrain/photonPose");
   private DoubleLogEntry logGyro = new DoubleLogEntry(log, "Drivetrain/gyro");
 
   // Constructor taking no arguments, all relevant values are defined in Constants.java
@@ -142,17 +157,18 @@ public class Drivetrain extends SubsystemBase {
     // group selected by Constants.Drive.kInvertDrive; left = False)
     leftMotorGroup.setInverted(!Dimensions.kInvertDrive);
     rightMotorGroup.setInverted(Dimensions.kInvertDrive);
-    leftEncoder.setDistancePerPulse(
-        Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
-    rightEncoder.setDistancePerPulse(
-        Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
-    rightEncoder.setReverseDirection(true);
     brakeMode(true);
-
     leftLead.setSmartCurrentLimit(40);
     leftFollow.setSmartCurrentLimit(40);
     rightLead.setSmartCurrentLimit(40);
     rightFollow.setSmartCurrentLimit(40);
+
+    leftEncoder.setDistancePerPulse(
+        Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
+    rightEncoder.setDistancePerPulse(
+        Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
+    leftEncoder.setSamplesToAverage(32);
+    rightEncoder.setSamplesToAverage(32);
 
     try {
       aprilTagFieldLayout =
@@ -178,7 +194,7 @@ public class Drivetrain extends SubsystemBase {
             // Local measurement standard deviations. Left encoder, right encoder, gyro.
             new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.01),
             // Global measurement standard deviations. X, Y, and theta.
-            new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 0.01));
+            new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 1));
 
     shuffleBoardInit();
   }
@@ -219,6 +235,13 @@ public class Drivetrain extends SubsystemBase {
   public void driveWheelSpeeds(DifferentialDriveWheelSpeeds wheelSpeeds) {
     // Feedforward calculated with current velocity and next velcocity with timestep of 20ms
     // (default robot loop period)
+    var nextChassisSpeeds = driveKinematics.toChassisSpeeds(wheelSpeeds);
+    wheelSpeeds =
+        driveKinematics.toWheelSpeeds(
+            new ChassisSpeeds(
+                accelLimiter.calculate(nextChassisSpeeds.vxMetersPerSecond),
+                0,
+                angularAccelLimter.calculate(nextChassisSpeeds.omegaRadiansPerSecond)));
     driveVoltages(
         DDFeedforward.calculate(
             lastSpeeds.leftMetersPerSecond,
@@ -246,16 +269,6 @@ public class Drivetrain extends SubsystemBase {
     leftMotorGroup.setVoltage(voltages.left);
     rightMotorGroup.setVoltage(voltages.right);
     logVoltages.append(new double[] {voltages.left, voltages.right});
-  }
-
-  // Same as driveVoltages but acceleration is limited according to the drivetrain model
-  public void driveLimitedVoltages(DifferentialDriveWheelVoltages voltages) {
-    voltages =
-        accelLimiter.calculate(
-            getLeftVelocity(), getRightVelocity(), voltages.left, voltages.right);
-
-    leftMotorGroup.setVoltage(voltages.left);
-    rightMotorGroup.setVoltage(voltages.right);
   }
 
   // Utility function to map joystick input nonlinearly for driver "feel"
@@ -292,6 +305,10 @@ public class Drivetrain extends SubsystemBase {
     return DDPoseEstimator.getEstimatedPosition();
   }
 
+  public DifferentialDriveWheelSpeeds getSpeeds() {
+    return encoderSpeeds;
+  }
+
   public double getRoll() {
     return gyro.getRoll();
   }
@@ -318,6 +335,10 @@ public class Drivetrain extends SubsystemBase {
     return trajectory;
   }
 
+  public Trajectory generateTrajectory(Pose2d endPose) {
+    return generateTrajectory(endPose, new ArrayList<Translation2d>());
+  }
+
   public Command AutoBalanceCommand() {
     return this.startEnd(
             () -> driveVoltages(kAuto.chargeTipVoltage, kAuto.chargeTipVoltage),
@@ -331,6 +352,24 @@ public class Drivetrain extends SubsystemBase {
                 .withTimeout(kAuto.creepTimeout));
   }
 
+  public Command testPathGen() {
+    PathPlannerTrajectory traj1 =
+        PathPlanner.generatePath(
+            new PathConstraints(1, 0.05),
+            new PathPoint(getPose().getTranslation(), getPose().getRotation()), // position, heading
+            new PathPoint(
+                getPose().getTranslation().plus(new Translation2d(2.0, 0)),
+                getPose().getRotation()) // position, headind
+            );
+
+    return new PPLTVControllerCommand(
+        traj1, this::getPose, ltvController, this::getSpeeds, this::driveVoltages, this);
+  }
+
+  public Command testPath() {
+    return new ProxyCommand(this::testPathGen);
+  }
+
   public Command mobilityAuto() {
     return this.startEnd(() -> driveVoltages(-1, -1), () -> driveVoltages(1, 1))
         .withTimeout(kAuto.mobilityTime)
@@ -342,15 +381,22 @@ public class Drivetrain extends SubsystemBase {
     SBSensors.add("NavX2", gyro).withWidget(BuiltInWidgets.kGyro);
     SBSensors.add("Left Encoder", leftEncoder).withWidget(BuiltInWidgets.kEncoder);
     SBSensors.add("Right Encoder", rightEncoder).withWidget(BuiltInWidgets.kEncoder);
-    SBSensors.addDouble("Navx2", () -> gyro.getRoll());
     SBTab.add("Pose Estimate", robotField2d)
         .withWidget(BuiltInWidgets.kField)
         .withSize(7, 4)
         .withPosition(2, 0);
+    SBTab.addDouble("Left Voltage", () -> leftLead.getAppliedOutput() * 12);
+    SBTab.addDouble("Right Voltage", () -> rightLead.getAppliedOutput() * 12);
+    SBTab.addDouble("Left Speed", () -> getSpeeds().leftMetersPerSecond);
+    SBTab.addDouble("Right Speed", () -> getSpeeds().rightMetersPerSecond);
   }
 
   @Override
   public void periodic() {
+    encoderSpeeds =
+        new DifferentialDriveWheelSpeeds(
+            leftVelocityLimiter.calculate(getLeftVelocity()),
+            rightVelocityLimiter.calculate(getRightVelocity()));
     // Update pose estimator with odometry
     DDPoseEstimator.updateWithTime(
         Timer.getFPGATimestamp(),
