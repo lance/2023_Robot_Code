@@ -1,7 +1,6 @@
 package frc.robot.commands;
 
 import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.PathPlannerTrajectory.PathPlannerState;
 import com.pathplanner.lib.server.PathPlannerServer;
 import edu.wpi.first.math.controller.DifferentialDriveWheelVoltages;
 import edu.wpi.first.math.controller.LTVDifferentialDriveController;
@@ -11,8 +10,6 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
-import edu.wpi.first.wpilibj.smartdashboard.Field2d;
-import edu.wpi.first.wpilibj.smartdashboard.FieldObject2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.*;
 import edu.wpi.first.wpilibj2.command.CommandBase;
@@ -31,14 +28,11 @@ public class PPLTVControllerCommand extends CommandBase {
 
   private PathPlannerTrajectory transformedTrajectory;
 
-  private static final Field2d logField = new Field2d();
-  private static final FieldObject2d desired = logField.getObject("Desired");
-
   private static Consumer<PathPlannerTrajectory> logActiveTrajectory = null;
   private static Consumer<Pose2d> logTargetPose = null;
   private static Consumer<DifferentialDriveWheelVoltages> logSetpoint = null;
-  // private static BiConsumer<Translation2d, Rotation2d> logError =
-  //    PPLTVControllerCommand::defaultLogError;
+  private static BiConsumer<Translation2d, Rotation2d> logError =
+      PPLTVControllerCommand::defaultLogError;
 
   /**
    * Constructs a new PPRamseteCommand that, when executed, will follow the provided trajectory. PID
@@ -144,8 +138,6 @@ public class PPLTVControllerCommand extends CommandBase {
     PathPlannerTrajectory.PathPlannerState desiredState =
         (PathPlannerTrajectory.PathPlannerState) transformedTrajectory.sample(currentTime);
 
-    logField.setRobotPose(currentPose);
-    desired.setPose(desiredState.poseMeters);
     PathPlannerServer.sendPathFollowingData(desiredState.poseMeters, currentPose);
 
     DifferentialDriveWheelVoltages targetDifferentialDriveWheelVoltages =
@@ -161,17 +153,11 @@ public class PPLTVControllerCommand extends CommandBase {
       logTargetPose.accept(desiredState.poseMeters);
     }
 
-    /*if (logError != null) {
+    if (logError != null) {
       logError.accept(
           currentPose.getTranslation().minus(desiredState.poseMeters.getTranslation()),
           currentPose.getRotation().minus(desiredState.poseMeters.getRotation()));
-    }*/
-    defaultLogError(
-        currentPose.getTranslation().minus(desiredState.poseMeters.getTranslation()),
-        currentPose.getRotation().minus(desiredState.poseMeters.getRotation()),
-        this.speedsSupplier.get().leftMetersPerSecond,
-        this.speedsSupplier.get().rightMetersPerSecond,
-        desiredState);
+    }
 
     if (logSetpoint != null) {
       logSetpoint.accept(targetDifferentialDriveWheelVoltages);
@@ -194,22 +180,11 @@ public class PPLTVControllerCommand extends CommandBase {
     return this.timer.hasElapsed(transformedTrajectory.getTotalTimeSeconds());
   }
 
-  private static void defaultLogError(
-      Translation2d translationError,
-      Rotation2d rotationError,
-      double leftMetersPerSecond,
-      double rightMetersPerSecond,
-      PathPlannerState desiredState) {
+  private static void defaultLogError(Translation2d translationError, Rotation2d rotationError) {
     SmartDashboard.putNumber("PPLTVControllerCommand/xErrorMeters", translationError.getX());
     SmartDashboard.putNumber("PPLTVControllerCommand/yErrorMeters", translationError.getY());
     SmartDashboard.putNumber(
         "PPLTVControllerCommand/rotationErrorDegrees", rotationError.getDegrees());
-    SmartDashboard.putData("Blah blah", logField);
-    SmartDashboard.putNumber("Left Speed: ", leftMetersPerSecond);
-    SmartDashboard.putNumber("Right Speed: ", rightMetersPerSecond);
-    SmartDashboard.putNumber("Forward desired: ", desiredState.velocityMetersPerSecond);
-    SmartDashboard.putNumber("angular desired: ", desiredState.angularVelocityRadPerSec);
-    SmartDashboard.putNumber("Desired accel: ", desiredState.accelerationMetersPerSecondSq);
   }
 
   /**
@@ -233,6 +208,6 @@ public class PPLTVControllerCommand extends CommandBase {
     PPLTVControllerCommand.logActiveTrajectory = logActiveTrajectory;
     PPLTVControllerCommand.logTargetPose = logTargetPose;
     PPLTVControllerCommand.logSetpoint = logSetpoint;
-    // PPLTVControllerCommand.logError = logError;
+    PPLTVControllerCommand.logError = logError;
   }
 }
