@@ -21,7 +21,7 @@ public class ArmGripperCommands {
 
   public Command placeCommad() {
     return arm.simpleMove(0, kAuto.placeDrop)
-        .unless(() -> arm.getState() != armState.L3 && arm.getState() != armState.L2)
+        .unless(() -> arm.getArmState() != armState.L3 && arm.getArmState() != armState.L2)
         .andThen(gripper.ejectCommand());
   }
 

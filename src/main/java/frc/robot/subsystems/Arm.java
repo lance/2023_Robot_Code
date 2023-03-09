@@ -50,7 +50,7 @@ import frc.robot.utilities.ArmTrajectory;
 import java.util.Map;
 
 public class Arm extends SubsystemBase {
-  // Object initialization motor controllers
+  // Motor controller objects
   private final CANSparkMax proximalNEO1 =
       new CANSparkMax(CanId.proximalNEO1, MotorType.kBrushless);
   private final CANSparkMax proximalNEO2 =
@@ -72,6 +72,8 @@ public class Arm extends SubsystemBase {
 
   private EncoderSim proximalEncoderSim = new EncoderSim(proximalEncoder);
   private EncoderSim forearmEncoderSim = new EncoderSim(forearmEncoder);
+
+  @SuppressWarnings("unused")
   private EncoderSim turretEncoderSim = new EncoderSim(turretEncoder);
 
   // Offsets and states
@@ -81,10 +83,6 @@ public class Arm extends SubsystemBase {
           / Encoders.Forearm.gear_ratio;
   private double turretOffset = Encoders.Turret.initial;
 
-  private final SimpleMotorFeedforward TurretFeedforward =
-      new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
-  private final PIDController TurretPID = new PIDController(Turret.kp, Turret.ki, Turret.kd);
-
   private Matrix<N4, N1> armSetpoint;
   private Matrix<N4, N1> simState;
   private double turretSetpoint;
@@ -93,8 +91,15 @@ public class Arm extends SubsystemBase {
   // Controls objects
   private final DoubleJointedArmController armController;
   private final ArmDefaultTrajectories trajectoryMap;
+  private final SimpleMotorFeedforward TurretFeedforward =
+      new SimpleMotorFeedforward(Turret.ks, Turret.kv, Turret.ka);
+  private final PIDController TurretPID = new PIDController(Turret.kp, Turret.ki, Turret.kd);
 
-  // Mechanism 2d
+  // Dashboard (Shuffleboard + Mechanism 2d)
+  private ShuffleboardTab SBTab = Shuffleboard.getTab("Arm");
+  private ShuffleboardLayout SBSensors;
+  private ShuffleboardLayout SBMotors;
+  private ShuffleboardLayout SBState;
   private Mechanism2d arm2d = new Mechanism2d(3, 2.2);
   private MechanismRoot2d base2d = arm2d.getRoot("Arm", 1, 0.2413);
   private MechanismLigament2d proximal2d =
@@ -106,12 +111,6 @@ public class Arm extends SubsystemBase {
           new MechanismLigament2d("Forearm", Forearm.length, -30, 5, new Color8Bit(255, 255, 255)));
   private MechanismLigament2d gripper2d =
       forearm2d.append(new MechanismLigament2d("Gripper", .25, -30, 5, new Color8Bit(0, 255, 0)));
-
-  // Shuffleboard
-  private ShuffleboardTab SBTab = Shuffleboard.getTab("Arm");
-  private ShuffleboardLayout SBSensors;
-  private ShuffleboardLayout SBMotors;
-  private ShuffleboardLayout SBState;
 
   // Logging
   private DataLog log = DataLogManager.getLog();
@@ -127,36 +126,9 @@ public class Arm extends SubsystemBase {
       new DoubleArrayLogEntry(log, "/ArmSubsystem/calculatedVoltages");
 
   public Arm() {
-    // Proximal motor config (magic numbers because these should never be touched)
-    proximalNEO1.setIdleMode(IdleMode.kBrake);
-    proximalNEO1.setInverted(true);
-    proximalNEO1.setSmartCurrentLimit(40);
-    proximalNEO2.setIdleMode(IdleMode.kBrake);
-    proximalNEO2.follow(proximalNEO1, true);
-    proximalNEO2.setSmartCurrentLimit(40);
-
-    // Forarm motor config
-    forearmNEO.setIdleMode(IdleMode.kBrake);
-    forearmNEO.setInverted(true);
-    forearmNEO.setSmartCurrentLimit(40);
-
-    // Turret motor config
-    turretController.setNeutralMode(NeutralMode.Brake);
-
-    // Encoder setup
-    absProximalEncoder.setDistancePerRotation(-2 * Math.PI * Encoders.Proximal.gear_ratio);
-    absForearmEncoder.setDistancePerRotation(2 * Math.PI);
-    absTurretEncoder.setDistancePerRotation(2 * Math.PI * Encoders.Turret.gear_ratio);
-
-    proximalEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Proximal.gear_ratio / Encoders.PPR);
-    forearmEncoder.setDistancePerPulse(2 * Math.PI / Encoders.PPR);
-    forearmEncoder.setReverseDirection(true);
-    turretEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Turret.gear_ratio / Encoders.PPR);
-    turretEncoder.setReverseDirection(true);
-
-    proximalEncoder.reset();
-    forearmEncoder.reset();
-    turretEncoder.reset();
+    // Hardware init
+    motorInit();
+    encoderInit();
 
     // Initial setpoints
     armSetpoint = getArmMeasuredStates();
@@ -167,11 +139,107 @@ public class Arm extends SubsystemBase {
     armController =
         new DoubleJointedArmController(
             Feedback.proximal_kP, Feedback.proximal_kD, Feedback.forearm_kP, Feedback.forearm_kD);
-    reset(armSetpoint);
+    resetArmFF(armSetpoint);
     trajectoryMap = new ArmDefaultTrajectories(this);
 
+    // Start telemetry
     telemetryInit();
   }
+
+  // -------------------- Arm movement commands --------------------
+
+  public Command simpleTrajectory(double startx, double starty, double endx, double endy) {
+    var profile =
+        motionProfile(
+            new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(startx, starty),
+            new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(endx, endy));
+    return new ArmTrajectoryCommand(new ArmTrajectory(profile), this)
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+  }
+
+  public Command presetTrajectory(Pair<armState, armState> trajPair) {
+    return new ArmTrajectoryCommand(trajectoryMap.getTrajectory(trajPair), this)
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+  }
+
+  public Command simpleMove(double xDelta, double yDelta) {
+    return new ProxyCommand(() -> simpleMoveGenerator(xDelta, yDelta));
+  }
+
+  public Command gotoState(armState targetState) {
+    return new ProxyCommand(() -> gotoStateGenerate(targetState))
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+  }
+
+  // -------------------- Turret movement commands --------------------
+
+  public Command turretHome() {
+    return this.runOnce(() -> setTurretSetpoint(0));
+  }
+
+  // -------------------- Initialization commands --------------------
+
+  public Command encoderStartCommand() {
+    return new WaitUntilCommand(
+            () ->
+                absProximalEncoder.isConnected()
+                    && absForearmEncoder.isConnected()
+                    && absTurretEncoder.isConnected())
+        .withTimeout(5)
+        .andThen(new WaitCommand(1))
+        .andThen(this::encoderZero)
+        .ignoringDisable(true);
+  }
+
+  // -------------------- Private command suppliers --------------------
+
+  private Command gotoStateGenerate(armState targetState) {
+    // Do nothing if already at state
+    if (targetState == state) return new WaitCommand(0);
+    ArmTrajectory trajectory = new ArmTrajectory();
+    armState trajState = state;
+
+    // Move from starting configuration to home position if necessary
+    if (state == armState.INIT && targetState != armState.HOME) {
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(
+                  new Pair<armState, armState>(armState.INIT, armState.HOME)));
+      trajState = armState.HOME;
+    }
+
+    // Go through neutral or go to/from home
+    if (state != armState.HOME && targetState != armState.HOME) {
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(
+                  new Pair<armState, armState>(trajState, armState.NEUTRAL)));
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(
+                  new Pair<armState, armState>(armState.NEUTRAL, targetState)));
+    } else {
+      trajectory =
+          trajectory.concatenate(
+              trajectoryMap.getTrajectory(new Pair<armState, armState>(trajState, targetState)));
+    }
+
+    // Return a trajectory command
+    return new ArmTrajectoryCommand(trajectory, this)
+        .andThen(() -> state = targetState)
+        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
+  }
+
+  public Command simpleMoveGenerator(double xDelta, double yDelta) {
+    return simpleTrajectory(
+        getXY().get(0, 0),
+        getXY().get(1, 0),
+        getXY().get(0, 0) + xDelta,
+        getXY().get(1, 0) + yDelta);
+  }
+
+  // -------------------- Kinematics helpers --------------------
+  // Find Ben if you want the math
 
   // 2d kinematics: angles -> xy
   public Matrix<N2, N1> kinematics2D(Matrix<N2, N1> matrixSE) {
@@ -215,6 +283,8 @@ public class Arm extends SubsystemBase {
                     / (2 * r * Forearm.length));
     return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(theta_s, theta_e - theta_s);
   }
+
+  // -------------------- Trajectory profile generators --------------------
 
   // Generate joint-space trapozidal motion profiles
   public Pair<TrapezoidProfile, TrapezoidProfile> motionProfileVelocity(
@@ -262,6 +332,87 @@ public class Arm extends SubsystemBase {
     return new Pair<>(profileShoulder, profileElbow); // Return as pair
   }
 
+  // -------------------- Public interface methods --------------------
+
+  public void setArmSetpoint(Matrix<N4, N1> setpoint) {
+    armSetpoint = setpoint;
+  }
+
+  public void setTurretSetpoint(double setpoint) {
+    turretSetpoint = setpoint;
+  }
+
+  public Matrix<N4, N1> getArmSetPoint() {
+    return armSetpoint;
+  }
+
+  public double getTurretSetpoint() {
+    return turretSetpoint;
+  }
+
+  public void resetArmFF(Matrix<N4, N1> state) {
+    armController.reset(state);
+  }
+
+  public Matrix<N2, N1> getXY() {
+    return kinematics2D(armSetpoint.block(2, 1, 0, 0));
+  }
+
+  public armState getArmState() {
+    return state;
+  }
+
+  // -------------------- Periodic methods --------------------
+
+  @Override
+  public void periodic() {
+    // Check for encoder init
+
+    // Calculate voltages
+    var state = getArmMeasuredStates();
+    var armVoltages = armController.calculate(state, armSetpoint);
+    var turretSRX = calculateTurretVoltage(turretSetpoint);
+
+    // Set voltages
+    setArmVoltages(armVoltages);
+    turretController.setVoltage(turretSRX);
+
+    // Log values and update mechanism2d
+    logSetpoint.append(
+        new double[] {
+          armSetpoint.get(0, 0), armSetpoint.get(1, 0), armSetpoint.get(2, 0), armSetpoint.get(3, 0)
+        });
+    logState.append(
+        new double[] {state.get(0, 0), state.get(1, 0), state.get(2, 0), state.get(3, 0)});
+    logCalculatedVoltages.append(new double[] {armVoltages.get(0, 0), armVoltages.get(1, 0)});
+    logActualVoltages.append(
+        new double[] {proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput()});
+    //
+    proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
+    forearm2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(1, 0)));
+    gripper2d.setAngle(
+        Units.radiansToDegrees(
+            -(getArmMeasuredStates().get(0, 0) + getArmMeasuredStates().get(1, 0))));
+  }
+
+  @Override
+  public void simulationPeriodic() {
+    // This method will be called once per scheduler run during simulation
+    simState =
+        NumericalIntegration.rkdp(
+            armController::system_model, simState, getArmVoltages(), 20.0 / 1000.0);
+    proximalEncoderSim.setDistance(simState.get(0, 0) - proximalOffset);
+    forearmEncoderSim.setDistance(
+        ((simState.get(1, 0) + Encoders.Forearm.gear_ratio * simState.get(0, 0))
+                * (1.0 / Encoders.Forearm.gear_ratio))
+            - forearmOffset);
+    proximalEncoderSim.setRate(simState.get(2, 0));
+    forearmEncoderSim.setRate(simState.get(3, 0));
+  }
+
+  // -------------------- Hardware interface methods --------------------
+
+  // Return raw encoders with offsets
   private Matrix<N4, N1> getArmEncoders() {
     return new MatBuilder<N4, N1>(Nat.N4(), Nat.N1())
         .fill(
@@ -271,6 +422,7 @@ public class Arm extends SubsystemBase {
             forearmEncoder.getRate());
   }
 
+  // Return encoders with math to adjust speed and position due to wacky gearing
   private Matrix<N4, N1> getArmMeasuredStates() {
     var encoders = getArmEncoders();
     return new MatBuilder<N4, N1>(Nat.N4(), Nat.N1())
@@ -283,19 +435,63 @@ public class Arm extends SubsystemBase {
                 + Encoders.Forearm.gear_ratio * encoders.get(3, 0));
   }
 
-  public Command encoderStartCommand() {
-    return new WaitUntilCommand(
-            () ->
-                absProximalEncoder.isConnected()
-                    && absForearmEncoder.isConnected()
-                    && absTurretEncoder.isConnected())
-        .withTimeout(5)
-        .andThen(new WaitCommand(1))
-        .andThen(this::encoderInit)
-        .ignoringDisable(true);
+  // FF + Feedback turret control
+  private double calculateTurretVoltage(double setpoint) {
+    return TurretFeedforward.calculate(setpoint)
+        + TurretPID.calculate(turretEncoder.getDistance(), setpoint);
+  }
+
+  // Get the controller's applied output
+  private Matrix<N2, N1> getArmVoltages() {
+    return new MatBuilder<N2, N1>(Nat.N2(), Nat.N1())
+        .fill(proximalNEO1.getAppliedOutput() * 12, forearmNEO.getAppliedOutput() * 12);
+  }
+
+  private void setArmVoltages(Matrix<N2, N1> voltages) {
+    proximalNEO1.setVoltage(voltages.get(0, 0));
+    forearmNEO.setVoltage(voltages.get(1, 0));
+  }
+
+  // -------------------- Hardware init methods --------------------
+
+  private void motorInit() {
+    // Proximal motor config (magic numbers because these should never be touched)
+    proximalNEO1.setIdleMode(IdleMode.kBrake);
+    proximalNEO1.setInverted(true);
+    proximalNEO1.setSmartCurrentLimit(40);
+    proximalNEO2.setIdleMode(IdleMode.kBrake);
+    proximalNEO2.follow(proximalNEO1, true);
+    proximalNEO2.setSmartCurrentLimit(40);
+
+    // Forarm motor config
+    forearmNEO.setIdleMode(IdleMode.kBrake);
+    forearmNEO.setInverted(true);
+    forearmNEO.setSmartCurrentLimit(40);
+
+    // Turret motor config
+    turretController.setNeutralMode(NeutralMode.Brake);
   }
 
   private void encoderInit() {
+    // Absolute encoders
+    absProximalEncoder.setDistancePerRotation(-2 * Math.PI * Encoders.Proximal.gear_ratio);
+    absForearmEncoder.setDistancePerRotation(2 * Math.PI);
+    absTurretEncoder.setDistancePerRotation(2 * Math.PI * Encoders.Turret.gear_ratio);
+
+    //
+    proximalEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Proximal.gear_ratio / Encoders.PPR);
+    forearmEncoder.setDistancePerPulse(2 * Math.PI / Encoders.PPR);
+    forearmEncoder.setReverseDirection(true);
+    turretEncoder.setDistancePerPulse(2 * Math.PI * Encoders.Turret.gear_ratio / Encoders.PPR);
+    turretEncoder.setReverseDirection(true);
+
+    proximalEncoder.reset();
+    forearmEncoder.reset();
+    turretEncoder.reset();
+  }
+
+  // I'm not really sure how this works all I know is that id does
+  private void encoderZero() {
     if (Robot.isReal()) {
       proximalOffset =
           absProximalEncoder.getDistance() + Encoders.Proximal.initial - Encoders.Proximal.offset;
@@ -318,26 +514,6 @@ public class Arm extends SubsystemBase {
           absTurretEncoder.getDistance()
         });
     logEncoderOffsets.append(new double[] {proximalOffset, forearmOffset, turretOffset});
-  }
-
-  public void setVoltages(double shoulder, double elbow) {
-    proximalNEO1.setVoltage(shoulder);
-    forearmNEO.setVoltage(elbow);
-  }
-
-  private void setArmVoltages(Matrix<N2, N1> voltages) {
-    proximalNEO1.setVoltage(voltages.get(0, 0));
-    forearmNEO.setVoltage(voltages.get(1, 0));
-  }
-
-  public double calculateTurretVoltage(double setpoint) {
-    return TurretFeedforward.calculate(setpoint)
-        + TurretPID.calculate(turretEncoder.getDistance(), setpoint);
-  }
-
-  private Matrix<N2, N1> getArmVoltages() {
-    return new MatBuilder<N2, N1>(Nat.N2(), Nat.N1())
-        .fill(proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput());
   }
 
   public void telemetryInit() {
@@ -378,141 +554,5 @@ public class Arm extends SubsystemBase {
         .withPosition(1, 0);
     SBState.addDouble("Y", () -> kinematics2D(getArmMeasuredStates().block(2, 1, 0, 0)).get(1, 0))
         .withPosition(1, 1);
-  }
-
-  public void setArmSetpoint(Matrix<N4, N1> setpoint) {
-    armSetpoint = setpoint;
-  }
-
-  public void setTurretSetpoint(double setpoint) {
-    turretSetpoint = setpoint;
-  }
-
-  public double getTurretSetpoint() {
-    return turretSetpoint;
-  }
-
-  public void reset(Matrix<N4, N1> state) {
-    armController.reset(state);
-  }
-
-  public Command simpleTrajectory(double startx, double starty, double endx, double endy) {
-    var profile =
-        motionProfile(
-            new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(startx, starty),
-            new MatBuilder<N2, N1>(Nat.N2(), Nat.N1()).fill(endx, endy));
-    return new ArmTrajectoryCommand(new ArmTrajectory(profile), this)
-        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-  }
-
-  public Command presetTrajectory(Pair<armState, armState> trajPair) {
-    return new ArmTrajectoryCommand(trajectoryMap.getTrajectory(trajPair), this)
-        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-  }
-
-  private Command gotoStateGenerate(armState targetState) {
-    if (targetState == state) return new WaitCommand(0);
-    ArmTrajectory trajectory = new ArmTrajectory();
-    armState trajState = state;
-    if (state == armState.INIT && targetState != armState.HOME) {
-      trajectory =
-          trajectory.concatenate(
-              trajectoryMap.getTrajectory(
-                  new Pair<armState, armState>(armState.INIT, armState.HOME)));
-      trajState = armState.HOME;
-    }
-
-    if (state != armState.HOME && targetState != armState.HOME) {
-      trajectory =
-          trajectory.concatenate(
-              trajectoryMap.getTrajectory(
-                  new Pair<armState, armState>(trajState, armState.NEUTRAL)));
-      trajectory =
-          trajectory.concatenate(
-              trajectoryMap.getTrajectory(
-                  new Pair<armState, armState>(armState.NEUTRAL, targetState)));
-    } else {
-      trajectory =
-          trajectory.concatenate(
-              trajectoryMap.getTrajectory(new Pair<armState, armState>(trajState, targetState)));
-    }
-
-    return new ArmTrajectoryCommand(trajectory, this)
-        .andThen(() -> state = targetState)
-        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-  }
-
-  public Command gotoState(armState targetState) {
-    return new ProxyCommand(() -> gotoStateGenerate(targetState))
-        .withInterruptBehavior(InterruptionBehavior.kCancelIncoming);
-  }
-
-  public Command simpleMoveGenerator(double xDelta, double yDelta) {
-    return simpleTrajectory(
-        getXY().get(0, 0),
-        getXY().get(1, 0),
-        getXY().get(0, 0) + xDelta,
-        getXY().get(1, 0) + yDelta);
-  }
-
-  public Command simpleMove(double xDelta, double yDelta) {
-    return new ProxyCommand(() -> simpleMoveGenerator(xDelta, yDelta));
-  }
-
-  public Matrix<N2, N1> getXY() {
-    return kinematics2D(armSetpoint.block(2, 1, 0, 0));
-  }
-
-  public armState getState() {
-    return state;
-  }
-
-  public Command turretHome() {
-    return this.runOnce(() -> setTurretSetpoint(0));
-  }
-
-  @Override
-  public void periodic() {
-    // Check for encoder init
-
-    // Calculate voltages
-    var state = getArmMeasuredStates();
-    var armVoltages = armController.calculate(state, armSetpoint);
-    var turretSRX = calculateTurretVoltage(turretSetpoint);
-
-    // Set voltages
-    setArmVoltages(armVoltages);
-    turretController.setVoltage(turretSRX);
-
-    // Log values and update mechanism2d
-    logSetpoint.append(
-        new double[] {
-          armSetpoint.get(0, 0), armSetpoint.get(1, 0), armSetpoint.get(2, 0), armSetpoint.get(3, 0)
-        });
-    logState.append(
-        new double[] {state.get(0, 0), state.get(1, 0), state.get(2, 0), state.get(3, 0)});
-    logCalculatedVoltages.append(new double[] {armVoltages.get(0, 0), armVoltages.get(1, 0)});
-    logActualVoltages.append(
-        new double[] {proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput()});
-    proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
-    forearm2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(1, 0)));
-    gripper2d.setAngle(
-        Units.radiansToDegrees(
-            -(getArmMeasuredStates().get(0, 0) + getArmMeasuredStates().get(1, 0))));
-  }
-
-  @Override
-  public void simulationPeriodic() {
-    // This method will be called once per scheduler run during simulation
-    simState =
-        NumericalIntegration.rkdp(
-            armController::system_model, simState, getArmVoltages(), 20.0 / 1000.0);
-    proximalEncoderSim.setDistance(simState.get(0, 0) - proximalOffset);
-    forearmEncoderSim.setDistance(
-        ((simState.get(1, 0) + Encoders.Forearm.gear_ratio * simState.get(0, 0))
-                * (1.0 / Encoders.Forearm.gear_ratio))
-            - forearmOffset);
-    proximalEncoderSim.setRate(simState.get(2, 0));
-    forearmEncoderSim.setRate(simState.get(3, 0));
   }
 }
