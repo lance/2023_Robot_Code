@@ -11,6 +11,8 @@ public class Indications extends SubsystemBase {
 
   private AddressableLED armLEDs;
   private AddressableLEDBuffer armLEDsBuffer;
+
+  @SuppressWarnings("unused")
   private LEDSubStrip proximalLeftStrip;
 
   public Indications() {

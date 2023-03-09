@@ -105,7 +105,7 @@ public class Gripper extends SubsystemBase {
               gripperState = GamePiece.NONE;
             })
         .until(() -> getGamePiece() == GamePiece.NONE)
-        .andThen(new WaitCommand(0.25))
+        .andThen(new WaitCommand(kGripper.ejectTime))
         .andThen(this.runOnce(() -> setVoltage(0)));
   }
 
@@ -126,7 +126,6 @@ public class Gripper extends SubsystemBase {
     logGripperState.append(String.valueOf(gripperState));
     logProximity.append(getProximity());
     logColorChannels.append(new double[] {color.red, color.green, color.blue});
-    // This method will be called once per scheduler run
   }
 
   @Override

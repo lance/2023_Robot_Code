@@ -1,11 +1,16 @@
 package frc.robot;
 
+import edu.wpi.first.math.MatBuilder;
+import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.Nat;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.Vector;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation3d;
+import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N2;
+import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.numbers.N5;
 import edu.wpi.first.math.util.Units;
 
@@ -58,6 +63,7 @@ public final class Constants {
     public static final double holdingVoltageKube = 1;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
+    public static final double ejectTime = 0.25;
   }
 
   public static final class kArm {
@@ -179,12 +185,6 @@ public final class Constants {
       }
     }
 
-    public final class TrajectoryConstants {
-      public static final int kMaxSpeedMetersPerSecond = 2;
-      public static final int kMaxAccelerationMetersPerSecondSquared = 1;
-      public static final boolean setReversed = true;
-    }
-
     public static final class Dimensions {
       public static final double wheelCircumferenceMeters = Units.inchesToMeters(6 * Math.PI);
       public static final double trackWidthMeters = 0.58208;
@@ -208,6 +208,15 @@ public final class Constants {
       public static final Vector<N5> qelems =
           VecBuilder.fill(.075, .075, Units.degreesToRadians(3), .1, .1);
       public static final Vector<N2> relems = VecBuilder.fill(12.0, 12.0);
+    }
+
+    public static final class PoseEstimator {
+      // Local measurement standard deviations. Left encoder, right encoder, gyro.
+      public static final Matrix<N3, N1> stateStdDevs =
+          new MatBuilder<N3, N1>(Nat.N3(), Nat.N1()).fill(0.02, 0.02, 0.01);
+      // Global measurement standard deviations. X, Y, and theta.
+      public static final Matrix<N3, N1> visionStdDevs =
+          new MatBuilder<>(Nat.N3(), Nat.N1()).fill(0.1, 0.1, 1);
     }
 
     public final class Encoders {
