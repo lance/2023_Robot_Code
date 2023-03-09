@@ -94,7 +94,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return drivetrain.testPath();
+    return null;
   }
 
   public Command getTelopInitCommand() {
