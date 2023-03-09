@@ -4,10 +4,12 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.armState;
+import frc.robot.Constants.kAuto;
 import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Gripper;
 import java.util.function.BooleanSupplier;
 
+// Compositions using both the arm and gripper
 public class ArmGripperCommands {
   private Arm arm;
   private Gripper gripper;
@@ -18,7 +20,7 @@ public class ArmGripperCommands {
   }
 
   public Command placeCommad() {
-    return arm.simpleMove(0, -0.11)
+    return arm.simpleMove(0, kAuto.placeDrop)
         .unless(() -> arm.getState() != armState.L3 && arm.getState() != armState.L2)
         .andThen(gripper.ejectCommand());
   }

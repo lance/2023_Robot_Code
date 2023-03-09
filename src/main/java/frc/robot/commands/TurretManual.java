@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.wpilibj2.command.CommandBase;
+import frc.robot.Constants.kArm.Constraints;
 import frc.robot.subsystems.Arm;
 import java.util.function.DoubleSupplier;
 
@@ -22,7 +23,7 @@ public class TurretManual extends CommandBase {
    */
   public TurretManual(DoubleSupplier angleInput, Arm arm) {
     this.arm = arm;
-    slewRateLimiter = new SlewRateLimiter(0.5);
+    slewRateLimiter = new SlewRateLimiter(Constraints.turretAcceleration);
     this.angleInput = angleInput;
 
     // Use addRequirements() here to declare subsystem dependencies.

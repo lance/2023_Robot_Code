@@ -31,6 +31,10 @@ public final class Constants {
       public static final int place = 1;
       public static final int intake = 2;
     }
+
+    public static final class DeadZones {
+      public static final double teleopDriveDeadZone = .01;
+    }
   }
 
   public static final class kAuto {
@@ -40,6 +44,7 @@ public final class Constants {
     public static final double tipTimeout = 0.7;
     public static final double creepTimeout = 3;
     public static final double mobilityTime = 0.5;
+    public static final double placeDrop = -.12;
   }
 
   public static final class kGripper {
@@ -61,6 +66,7 @@ public final class Constants {
       public static final double proximalAcceleration = 2;
       public static final double forearmVelocity = 3;
       public static final double forearmAcceleration = 3;
+      public static final double turretAcceleration = 0.5;
     }
 
     public static final class Motors {
@@ -194,6 +200,7 @@ public final class Constants {
       public static final double driverSpeed = 3;
       public static final double driverAngularSpeed = 3;
       public static final double driverAccel = 10;
+      public static final double driverAngularAccel = 5;
       public static final double precisionSpeed = 1;
     }
 
