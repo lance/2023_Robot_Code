@@ -4,10 +4,8 @@
 
 package frc.robot;
 
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.shuffleboard.Shuffleboard;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandJoystick;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -15,6 +13,7 @@ import frc.robot.Constants.OperatorInterface;
 import frc.robot.Constants.OperatorInterface.Bindings;
 import frc.robot.Constants.armState;
 import frc.robot.commands.ArmGripperCommands;
+import frc.robot.commands.AutoRoutines;
 import frc.robot.commands.TurretManual;
 import frc.robot.commands.UserArcadeDrive;
 import frc.robot.subsystems.Arm;
@@ -40,7 +39,7 @@ public class RobotContainer {
   private final Arm arm = new Arm();
   private final Gripper gripper = new Gripper();
   private final ArmGripperCommands armGripperCommands = new ArmGripperCommands(arm, gripper);
-  private final SendableChooser<Command> autoSelect = new SendableChooser<Command>();
+  private final AutoRoutines autoRoutines = new AutoRoutines(drivetrain, arm, gripper);
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -53,10 +52,8 @@ public class RobotContainer {
             () -> driverController.getRightTriggerAxis() > 0.1,
             drivetrain));
 
-    autoSelect.setDefaultOption("Do nothing", new WaitCommand(0));
-    autoSelect.addOption("Mobility", drivetrain.mobilityAuto());
-    autoSelect.addOption("Auto Balance", drivetrain.AutoBalanceCommand());
-    SmartDashboard.putData("Auto Selector", autoSelect);
+    // Post sendable chooser for auto
+    Shuffleboard.getTab("Auto").add("Auto selector", autoRoutines.getChooser()).withSize(3, 1);
 
     // Configure the trigger bindings
     configureBindings();
@@ -94,7 +91,7 @@ public class RobotContainer {
    * @return the command to run in autonomous
    */
   public Command getAutoCommand() {
-    return null;
+    return autoRoutines.getChooser().getSelected();
   }
 
   public Command getTelopInitCommand() {
