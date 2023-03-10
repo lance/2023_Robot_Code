@@ -444,7 +444,7 @@ public class Arm extends SubsystemBase {
   // Get the controller's applied output
   private Matrix<N2, N1> getArmVoltages() {
     return new MatBuilder<N2, N1>(Nat.N2(), Nat.N1())
-        .fill(proximalNEO1.getAppliedOutput() * 12, forearmNEO.getAppliedOutput() * 12);
+        .fill(proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput());
   }
 
   private void setArmVoltages(Matrix<N2, N1> voltages) {
