@@ -79,6 +79,10 @@ public class Gripper extends SubsystemBase {
     return GamePiece.NONE;
   }
 
+  public Command intakeCommand() {
+    return intakeCommand(GamePiece.KUBE);
+  }
+
   public Command intakeCommand(GamePiece Piece) {
     return this.startEnd(
             () -> {
