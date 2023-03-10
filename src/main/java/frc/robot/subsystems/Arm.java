@@ -386,7 +386,7 @@ public class Arm extends SubsystemBase {
         new double[] {state.get(0, 0), state.get(1, 0), state.get(2, 0), state.get(3, 0)});
     logCalculatedVoltages.append(new double[] {armVoltages.get(0, 0), armVoltages.get(1, 0)});
     logActualVoltages.append(
-        new double[] {proximalNEO1.getAppliedOutput(), forearmNEO.getAppliedOutput()});
+        new double[] {proximalNEO1.getAppliedOutput() * 12, forearmNEO.getAppliedOutput() * 12});
     //
     proximal2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(0, 0)));
     forearm2d.setAngle(Units.radiansToDegrees(getArmMeasuredStates().get(1, 0)));
