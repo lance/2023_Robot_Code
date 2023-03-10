@@ -139,6 +139,8 @@ public class Drivetrain extends SubsystemBase {
       new DoubleArrayLogEntry(log, "Drivetrain/poseEstimate");
   private DoubleArrayLogEntry logPhotonPose = new DoubleArrayLogEntry(log, "Drivetrain/photonPose");
   private DoubleLogEntry logGyro = new DoubleLogEntry(log, "Drivetrain/gyro");
+  private DoubleArrayLogEntry logFilteredVelocity =
+      new DoubleArrayLogEntry(log, "Drivetrain/filteredVelocity");
 
   // Constructor taking no arguments, all relevant values are defined in Constants.java
   public Drivetrain() {
@@ -356,6 +358,8 @@ public class Drivetrain extends SubsystemBase {
         new double[] {photonPose.getX(), photonPose.getY(), photonPose.getRotation().getRadians()});
     logLastWheelSpeeds.append(
         new double[] {lastSpeeds.leftMetersPerSecond, lastSpeeds.rightMetersPerSecond});
+    logFilteredVelocity.append(
+        new double[] {encoderSpeeds.leftMetersPerSecond, encoderSpeeds.rightMetersPerSecond});
   }
 
   @Override
@@ -395,9 +399,5 @@ public class Drivetrain extends SubsystemBase {
         .withWidget(BuiltInWidgets.kField)
         .withSize(7, 4)
         .withPosition(2, 0);
-    SBTab.addDouble("Left Voltage", () -> leftLead.getAppliedOutput() * 12);
-    SBTab.addDouble("Right Voltage", () -> rightLead.getAppliedOutput() * 12);
-    SBTab.addDouble("Left Speed", () -> getSpeeds().leftMetersPerSecond);
-    SBTab.addDouble("Right Speed", () -> getSpeeds().rightMetersPerSecond);
   }
 }
