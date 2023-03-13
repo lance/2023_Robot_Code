@@ -2,6 +2,7 @@ package frc.robot.commands;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import frc.robot.Constants.GamePiece;
 import frc.robot.Constants.armState;
 import frc.robot.Constants.kAuto;
@@ -20,7 +21,7 @@ public class ArmGripperCommands {
   }
 
   public Command placeCommad() {
-    return arm.simpleMove(0, kAuto.placeDrop)
+    return arm.simpleMove(.03, kAuto.placeDrop)
         .unless(() -> arm.getArmState() != armState.L3 && arm.getArmState() != armState.L2)
         .andThen(gripper.ejectCommand());
   }
@@ -30,6 +31,6 @@ public class ArmGripperCommands {
             gripper.intakeCommand(GamePiece.CONE),
             gripper.intakeCommand(GamePiece.KUBE),
             gamePieceSelector)
-        .andThen(arm.gotoState(armState.HOME));
+        .andThen(new ConditionalCommand(arm.gotoState(armState.HOME), new WaitCommand(0), () -> arm.getArmState() == armState.GROUND));
   }
 }

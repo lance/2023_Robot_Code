@@ -123,7 +123,7 @@ public class DoubleJointedArmController {
     var angles = x.block(Nat.N2(), Nat.N1(), 0, 0);
     if (angles.get(0, 0) >= Math.PI / 2) {
       return new MatBuilder<>(Nat.N2(), Nat.N1())
-          .fill(0, (x.get(1, 0) < -85 ? Forearm.torque_spring : 0));
+          .fill(0, 0);
     } else {
       return new MatBuilder<>(Nat.N2(), Nat.N1())
           .fill(
@@ -134,7 +134,7 @@ public class DoubleJointedArmController {
                           Proximal.angle_anchor - (angles.get(0, 0) + Proximal.angle_pulley)))
                   / dis_pulley(angles.get(0, 0))
                   * Proximal.len_pulley,
-              (x.get(1, 0) < -85 ? Forearm.torque_spring : 0));
+              0);
     }
   }
 
@@ -175,8 +175,8 @@ public class DoubleJointedArmController {
     var clamped =
         new MatBuilder<N2, N1>(Nat.N2(), Nat.N1())
             .fill(
-                MathUtil.clamp(combined.get(0, 0), -9, 9),
-                MathUtil.clamp(combined.get(1, 0), -9, 9));
+                MathUtil.clamp(combined.get(0, 0), -10.5, 10.5),
+                MathUtil.clamp(combined.get(1, 0), -10.5, 10.5));
     return clamped;
   }
 

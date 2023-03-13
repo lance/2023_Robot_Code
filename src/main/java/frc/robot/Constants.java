@@ -44,10 +44,10 @@ public final class Constants {
 
   public static final class kAuto {
     public static final double chargeTipVoltage = 4;
-    public static final double chargeCreepVoltage = 2;
-    public static final double chargeStopAngle = 12;
-    public static final double tipTimeout = 0.7;
-    public static final double creepTimeout = 3;
+    public static final double chargeCreepVoltage = 1;
+    public static final double chargeStopAngle = 11;
+    public static final double tipTimeout = 0.9;
+    public static final double creepTimeout = 8;
     public static final double mobilityTime = 0.5;
     public static final double placeDrop = -.12;
     public static final double velConstraint = 2;
@@ -56,13 +56,13 @@ public final class Constants {
 
   public static final class kGripper {
     public static final boolean inverted = true;
-    public static final int proximityThreshold = 150;
+    public static final int proximityThreshold = 95;
     public static final int coneProximityOverride = 300;
     public static final double intakeVoltageCone = 5;
-    public static final double intakeVoltageKube = 3;
+    public static final double intakeVoltageKube = 5;
     public static final double ejectVoltage = -2;
     public static final double holdingVoltageCone = 0.6;
-    public static final double holdingVoltageKube = 1;
+    public static final double holdingVoltageKube = 0.6;
     public static final int stallCurrentLimit = 5;
     public static final int freeCurrentLimit = 7;
     public static final double ejectTime = 0.25;
@@ -70,10 +70,10 @@ public final class Constants {
 
   public static final class kArm {
     public static final class Constraints {
-      public static final double proximalVelocity = 3;
-      public static final double proximalAcceleration = 2;
-      public static final double forearmVelocity = 3;
-      public static final double forearmAcceleration = 3;
+      public static final double proximalVelocity = 2;
+      public static final double proximalAcceleration = 0.65;
+      public static final double forearmVelocity = 2;
+      public static final double forearmAcceleration = 0.5;
       public static final double turretAcceleration = 0.5;
     }
 
@@ -97,9 +97,9 @@ public final class Constants {
       }
 
       public static final class Forearm {
-        public static final double initial = Units.degreesToRadians(-165);
-        public static final double offset = 2.709544;
-        public static final double gear_ratio = 16.0 / 34.0;
+        public static final double initial = Units.degreesToRadians(-173);
+        public static final double offset = 3.399199;
+        public static final double gear_ratio = 15.0 / 44.0;
         public static final int absPort = 12;
         public static final int APort = 10;
         public static final int BPort = 11;
@@ -121,7 +121,7 @@ public final class Constants {
       public static final double length = 0.889;
       public static final double inertia = 0.509046682;
       public static final double radius = 0.3504184;
-      public static final double gear_ratio = 320.0;
+      public static final double gear_ratio = 458.33;
       public static final double num_motors = 2;
       public static final double len_pulley = 0.1293622;
       public static final double len_anchor = 0.1788414;
@@ -136,7 +136,7 @@ public final class Constants {
       public static final double length = 0.8255;
       public static final double inertia = 0.866469442;
       public static final double radius = 0.6303518;
-      public static final double gear_ratio = 140.0;
+      public static final double gear_ratio = 422.5;
       public static final double num_motors = 1;
       public static final double torque_spring = 14.915;
     }

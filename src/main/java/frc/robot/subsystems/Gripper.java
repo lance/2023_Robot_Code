@@ -9,6 +9,7 @@ import edu.wpi.first.util.datalog.DoubleLogEntry;
 import edu.wpi.first.util.datalog.StringLogEntry;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
@@ -47,6 +48,7 @@ public class Gripper extends SubsystemBase {
     colorSensor.setDebugPrints(false);
 
     this.setDefaultCommand(holdCommand());
+    SmartDashboard.putNumber("Gripper Distance", 0);
   }
 
   // Sets the voltage of motors
@@ -130,6 +132,8 @@ public class Gripper extends SubsystemBase {
     logGripperState.append(String.valueOf(gripperState));
     logProximity.append(getProximity());
     logColorChannels.append(new double[] {color.red, color.green, color.blue});
+
+    SmartDashboard.putNumber("Gripper Distance", getProximity());
   }
 
   @Override
