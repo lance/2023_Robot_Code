@@ -45,7 +45,6 @@ public class AutoRoutines {
   // Auto paths go here
   private void loadRoutines() {
     routineMap.put("No Auto", gripper.intakeCommand());
-<<<<<<< HEAD
     routineMap.put(
         "Place Only",
         new SequentialCommandGroup(
@@ -192,9 +191,6 @@ public class AutoRoutines {
         PathPlanner.loadPath(
             "subCubeMobilityandBalance",
             new PathConstraints(kAuto.velConstraint, kAuto.accConstraint)));
-=======
-    routineMap.put("Balance", drivetrain.AutoBalanceCommand());
->>>>>>> aa02ac9 (Tweaks to improve things)
   }
 
   // Iterate over hashmap and add routines to sendable
