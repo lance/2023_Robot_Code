@@ -122,8 +122,7 @@ public class DoubleJointedArmController {
   private Matrix<N2, N1> Tsp(Matrix<N4, N1> x) {
     var angles = x.block(Nat.N2(), Nat.N1(), 0, 0);
     if (angles.get(0, 0) >= Math.PI / 2) {
-      return new MatBuilder<>(Nat.N2(), Nat.N1())
-          .fill(0, 0);
+      return new MatBuilder<>(Nat.N2(), Nat.N1()).fill(0, 0);
     } else {
       return new MatBuilder<>(Nat.N2(), Nat.N1())
           .fill(

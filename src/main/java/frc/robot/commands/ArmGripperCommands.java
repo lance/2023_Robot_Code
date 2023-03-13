@@ -31,6 +31,10 @@ public class ArmGripperCommands {
             gripper.intakeCommand(GamePiece.CONE),
             gripper.intakeCommand(GamePiece.KUBE),
             gamePieceSelector)
-        .andThen(new ConditionalCommand(arm.gotoState(armState.HOME), new WaitCommand(0), () -> arm.getArmState() == armState.GROUND));
+        .andThen(
+            new ConditionalCommand(
+                arm.gotoState(armState.HOME),
+                new WaitCommand(0),
+                () -> arm.getArmState() == armState.GROUND));
   }
 }
