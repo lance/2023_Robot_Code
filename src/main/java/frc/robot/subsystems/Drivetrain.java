@@ -7,10 +7,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.math.system.plant.LinearSystemId.identifyDrivetrainSystem;
 
 import com.kauailabs.navx.frc.AHRS;
-import com.pathplanner.lib.PathConstraints;
-import com.pathplanner.lib.PathPlanner;
 import com.pathplanner.lib.PathPlannerTrajectory;
-import com.pathplanner.lib.PathPoint;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
@@ -24,7 +21,6 @@ import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveKinematics;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
@@ -47,7 +43,6 @@ import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardLayout;
 import edu.wpi.first.wpilibj.shuffleboard.ShuffleboardTab;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.ProxyCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants.CanId;
 import frc.robot.Constants.OperatorInterface.DeadZones;
@@ -108,9 +103,6 @@ public class Drivetrain extends SubsystemBase {
       new Encoder(Encoders.leftAPort, Encoders.leftBPort, true, EncodingType.k1X);
   private Encoder rightEncoder =
       new Encoder(Encoders.rightAPort, Encoders.rightBPort, true, EncodingType.k1X);
-  private DifferentialDriveWheelSpeeds encoderSpeeds = new DifferentialDriveWheelSpeeds();
-  private SlewRateLimiter leftVelocityLimiter = new SlewRateLimiter(15);
-  private SlewRateLimiter rightVelocityLimiter = new SlewRateLimiter(15);
   private final AHRS gyro = new AHRS(Port.kMXP);
 
   // Create vision objects
@@ -139,8 +131,6 @@ public class Drivetrain extends SubsystemBase {
       new DoubleArrayLogEntry(log, "Drivetrain/poseEstimate");
   private DoubleArrayLogEntry logPhotonPose = new DoubleArrayLogEntry(log, "Drivetrain/photonPose");
   private DoubleLogEntry logGyro = new DoubleLogEntry(log, "Drivetrain/gyro");
-  private DoubleArrayLogEntry logFilteredVelocity =
-      new DoubleArrayLogEntry(log, "Drivetrain/filteredVelocity");
 
   // Constructor taking no arguments, all relevant values are defined in Constants.java
   public Drivetrain() {
@@ -200,24 +190,6 @@ public class Drivetrain extends SubsystemBase {
     return this.startEnd(() -> driveVoltages(-1, -1), () -> driveVoltages(1, 1))
         .withTimeout(kAuto.mobilityTime)
         .andThen(() -> driveVoltages(0, 0));
-  }
-
-  public Command testMoveGen() {
-    return followPath(
-        PathPlanner.generatePath(
-            new PathConstraints(1, .8),
-            new PathPoint(getPose().getTranslation(), getPose().getRotation()),
-            new PathPoint(
-                getPose().getTranslation().plus(new Translation2d(1, 0)),
-                getPose().getRotation())));
-  }
-
-  public Command testMove() {
-    return new ProxyCommand(this::testMoveGen);
-  }
-
-  public Command driveTest() {
-    return run(() -> driveVoltages(new DifferentialDriveWheelVoltages(1, 1)));
   }
 
   // -------------------- Helpers --------------------
@@ -342,10 +314,6 @@ public class Drivetrain extends SubsystemBase {
 
   @Override
   public void periodic() {
-    encoderSpeeds =
-        new DifferentialDriveWheelSpeeds(
-            leftVelocityLimiter.calculate(getLeftVelocity()),
-            rightVelocityLimiter.calculate(getRightVelocity()));
     // Update pose estimator with odometry
     DDPoseEstimator.updateWithTime(
         Timer.getFPGATimestamp(),
@@ -376,8 +344,6 @@ public class Drivetrain extends SubsystemBase {
         new double[] {photonPose.getX(), photonPose.getY(), photonPose.getRotation().getRadians()});
     logLastWheelSpeeds.append(
         new double[] {lastSpeeds.leftMetersPerSecond, lastSpeeds.rightMetersPerSecond});
-    logFilteredVelocity.append(
-        new double[] {encoderSpeeds.leftMetersPerSecond, encoderSpeeds.rightMetersPerSecond});
   }
 
   @Override
@@ -404,8 +370,8 @@ public class Drivetrain extends SubsystemBase {
         Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
     rightEncoder.setDistancePerPulse(
         Dimensions.wheelCircumferenceMeters / (Encoders.gearing * Encoders.PPR));
-    leftEncoder.setSamplesToAverage(32);
-    rightEncoder.setSamplesToAverage(32);
+    leftEncoder.setSamplesToAverage(20);
+    rightEncoder.setSamplesToAverage(20);
   }
 
   private void shuffleBoardInit() {

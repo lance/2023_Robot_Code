@@ -181,9 +181,9 @@ public final class Constants {
       }
 
       public final class Angular {
-        public static final double kS = 0.10491;
-        public static final double kV = 2.5962;
-        public static final double kA = 0.13804;
+        public static final double kS = 0.33032;
+        public static final double kV = 2.5257;
+        public static final double kA = 0.27961;
       }
     }
 
@@ -207,8 +207,7 @@ public final class Constants {
     }
 
     public static final class PathFollowing {
-      public static final Vector<N5> qelems =
-          VecBuilder.fill(.075, .075, Units.degreesToRadians(3), .1, .1);
+      public static final Vector<N5> qelems = VecBuilder.fill(.0625, .0625, 2.5, .95, .95);
       public static final Vector<N2> relems = VecBuilder.fill(12.0, 12.0);
     }
 

@@ -45,7 +45,6 @@ public class AutoRoutines {
   // Auto paths go here
   private void loadRoutines() {
     routineMap.put("No Auto", gripper.intakeCommand());
-    routineMap.put("Test", drivetrain.testMove());
     routineMap.put(
         "Place Only",
         new SequentialCommandGroup(
