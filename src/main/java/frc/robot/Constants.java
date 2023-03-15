@@ -98,7 +98,7 @@ public final class Constants {
 
       public static final class Forearm {
         public static final double initial = Units.degreesToRadians(-173);
-        public static final double offset = 3.399199;
+        public static final double offset = 3.303940;
         public static final double gear_ratio = 15.0 / 44.0;
         public static final int absPort = 12;
         public static final int APort = 10;
@@ -136,7 +136,7 @@ public final class Constants {
       public static final double length = 0.8255;
       public static final double inertia = 0.866469442;
       public static final double radius = 0.6303518;
-      public static final double gear_ratio = 422.5;
+      public static final double gear_ratio = 187.73;
       public static final double num_motors = 1;
       public static final double torque_spring = 14.915;
     }
@@ -176,8 +176,8 @@ public final class Constants {
       // Feedforwards from sysid
       public final class Linear {
         public static final double kS = 0.093288;
-        public static final double kV = 2.507;
-        public static final double kA = 0.23549;
+        public static final double kV = 2.5031; // 2.507;
+        public static final double kA = 0.40969; // 0.23549;
       }
 
       public final class Angular {
@@ -222,13 +222,13 @@ public final class Constants {
     }
 
     public final class Encoders {
-      public static final int rightAPort = 0;
-      public static final int rightBPort = 1;
-      public static final int leftAPort = 2;
-      public static final int leftBPort = 3;
+      public static final int rightAPort = 2;
+      public static final int rightBPort = 3;
+      public static final int leftAPort = 0;
+      public static final int leftBPort = 1;
 
-      public static final double PPR = 1024;
-      public static final double gearing = 34.0 / 18.0;
+      public static final double PPR = 2048;
+      public static final double gearing = 1;
     }
   }
 

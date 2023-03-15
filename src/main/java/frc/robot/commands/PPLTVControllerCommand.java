@@ -147,6 +147,15 @@ public class PPLTVControllerCommand extends CommandBase {
             this.speedsSupplier.get().rightMetersPerSecond,
             desiredState);
 
+    System.out.println("Desired");
+    System.out.println(desiredState.accelerationMetersPerSecondSq);
+    System.out.println(desiredState.velocityMetersPerSecond);
+    System.out.println("Yeet");
+    System.out.println(targetDifferentialDriveWheelVoltages.left);
+    System.out.println(targetDifferentialDriveWheelVoltages.right);
+    System.out.println(this.speedsSupplier.get().leftMetersPerSecond);
+    System.out.println(this.speedsSupplier.get().rightMetersPerSecond);
+
     this.output.accept(targetDifferentialDriveWheelVoltages);
 
     if (logTargetPose != null) {
