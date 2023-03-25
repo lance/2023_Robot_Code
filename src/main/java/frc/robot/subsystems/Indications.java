@@ -45,6 +45,7 @@ public class Indications extends SubsystemBase {
 
   @SuppressWarnings("unused")
   private LEDSubStrip proximalLeftStrip;
+
   private HashMap<RobotStates, Indicator> stateIndications;
   private StringEntry currentStateEntry;
   private RobotStates currentState = RobotStates.OFF;
